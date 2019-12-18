@@ -1,0 +1,358 @@
+<config>
+  {
+    "usingComponents": {
+      "baseNone": "../../../components/baseNone/baseNone.mina",
+      "baseVideoList": "../../../components/baseVideoList/baseVideoList.mina",
+      "pagation": "../../../components/pagation/pagation.mina",
+      "scroller-top": "../../../components/scroller-top/scroller-top.mina"
+    }
+  }
+</config>
+<template>
+  <view>
+    <view class="main {{myCollect?'active':''}}">
+      <view class="screen flex" wx:if="{{!myCollect}}">
+        <view class="screen-item flex1">
+          <picker bindchange="bindPickerChange" data-type="order" value="{{orderIndex}}" range="{{orderList}}" range-key="key">
+            <view class="picker">
+              {{orderList[orderIndex].key}}<text class="iconfont icon-down"></text>
+            </view>
+          </picker>
+        </view>
+        <view class="screen-item flex1">
+          <picker bindchange="bindPickerChange" data-type="grade" value="{{gradeIndex}}" range="{{gradeList}}" range-key="key">
+            <view class="picker">
+              {{gradeList[gradeIndex].key}}<text class="iconfont icon-down"></text>
+            </view>
+          </picker>
+        </view>
+      </view>
+      <block wx:if="{{lessonList.length>0}}">
+        <baseVideoList list="{{lessonList}}" bind:clickVideo="clickVideo"></baseVideoList>
+        <pagation params="{{params}}"></pagation>
+      </block>
+      <block wx:else>
+        <baseNone>
+          <text slot="tips">暂无视频~</text>
+        </baseNone>
+      </block>
+    </view>
+  </view>
+  <scroller-top scrollTop="{{scrollTop}}"></scroller-top>
+</template>
+<script>
+  import {Page} from '@tinajs/tina';
+  import wechat from '@/until/wechat';
+  import dayjs from 'dayjs';
+  import { tinax } from "../../../store";
+
+  Page.define({
+    mixins: [
+      tinax.connect({
+        getters(getters){
+          return {
+            videoIndex: getters.videoIndex()
+          }
+        },
+        actions(actions){
+          return {
+            setVideoIndex: actions.setVideoIndex
+          }
+        }
+      })
+    ],
+    data: {
+      params: {
+        courseId: '',
+        gradeOrder: 0,
+        order: 0,
+        offSize: 10,
+        offSet: 0,
+        nothing: false,
+        loading: false
+      },
+      lessonList: [],
+      orderList:[
+        {value: 0, key: '默认排序', },
+        {value: 1, key: '热度排序', }
+      ],
+      gradeList:wechat.getGradeList(),
+      orderIndex:0,
+      gradeIndex:0,
+      myCollect:false
+    },
+    beforeLoad() {
+    },
+    onLoad() {
+      if (this.$route.query.courseId) {
+        this.data.params.courseId = this.$route.query.courseId;
+      }
+      if(this.$route.query.type){
+        wx.setNavigationBarTitle({
+          title: '我的收藏'
+        });
+        this.data.myCollect = true;
+        this.setData({
+          myCollect: true
+        })
+      }
+      this.data.params.nothing = false;
+      this.setData({
+        params: this.data.params
+      });
+      this.getList(true);
+    },
+    onReady() {
+    },
+    onShow() {
+      let index = this.data.videoIndex;
+      let page = parseInt(index/10);
+      if (this.data.videoIndex !== ''){
+        this.changeList(page);
+      }
+    },
+    onHide() {
+    },
+    onUnload() {},
+    compute() {
+    },
+    methods: {
+      // 点击video
+      clickVideo(e){
+        let lessonId = e.detail.lessonList;
+        let videoId = e.detail.videoId;
+        let index = e.detail.index;
+        this.setVideoIndex(index);
+        this.$router.navigate(`/pages/video/videoDetail/videoDetail?lessonId=${lessonId}&videoId=${videoId}`);
+      },
+      // 更改需要更新的数据
+      async changeList(page) {
+        if(this.data.myCollect) { // 收藏列表
+          let params = {
+            offSet: page,
+            offSize: 10
+          };
+          let res = await this.$api.other.getMyCollectVideoList(params);
+          if (res.rcode === 300 && res.rcode === res.data !== null){
+            // this.data.lessonList.splice(page, 1, res.data.videoList[0]);
+            let videoList = res.data.videoList;
+            videoList.forEach((value, index)=>{
+              this.data.lessonList.splice(page * 10 + index, 1, value);
+            });
+            this.setData({
+              lessonList: this.data.lessonList
+            });
+          }
+        } else { // 普通视频列表
+          let params = {
+            offSet: page,
+            offSize: 10,
+            gradeOrder: this.data.params.gradeOrder,
+            order: this.data.params.order,
+            courseId: this.data.params.courseId
+          };
+          let res = await this.$api.course.getCourseLesson(params);
+          if (res.rcode === 300 && res.data !== null){
+            let lessonList = res.data.lessonList;
+            lessonList.forEach((value)=>{
+              let vTime = value.videoModel.videoTime * 1000;
+              vTime = dayjs(vTime).format('mm:ss');
+              value.videoModel.videoTimeStr = vTime;
+            });
+            // this.data.lessonList.splice(page, 1, lessonList[0]);
+            lessonList.forEach((value, index)=>{
+              this.data.lessonList.splice(page * 10 + index, 1, value);
+            });
+            this.setData({
+              lessonList: this.data.lessonList
+            });
+          }
+        }
+        this.setVideoIndex('');
+      },
+      async getList(cover){
+        if (this.data.params.nothing){
+          return
+        }
+        if (cover){
+          // 重置数据
+          this.data.params.offSet = 0;
+
+          this.data.params.loading = false;
+          this.data.lessonList = [];
+          this.setData({
+            params: this.data.params,
+            lessonList: this.data.lessonList
+          })
+        }
+        this.setData({
+          "params.loading": true
+        });
+        this.data.params.order=this.data.orderList[this.data.orderIndex].value;
+        this.data.params.gradeOrder=this.data.gradeList[this.data.gradeIndex].value;
+        if(this.data.myCollect){ // 收藏列表
+          let res = await this.$api.other.getMyCollectVideoList(this.data.params);
+          if (res.rcode === 300){
+            this.data.lessonList = this.data.lessonList.concat(res.data.videoList);
+            this.setData({
+              lessonList: this.data.lessonList
+            });
+            // 判断是否到底
+            if (res.data.videoList.length < this.data.params.offSize) {
+              this.setData({
+                'params.nothing': true
+              })
+            }else {
+              this.data.params.offSet++;
+              this.setData({
+                params: this.data.params
+              })
+            }
+          }
+          this.setData({
+            "params.loading": false
+          })
+        }else { // 普通视频列表
+          let res = await this.$api.course.getCourseLesson(this.data.params);
+          if (res.rcode === 300 && res.data !== null){
+            let lessonList = res.data.lessonList;
+            lessonList.forEach((value)=>{
+              let vTime = value.videoModel.videoTime * 1000;
+              vTime = dayjs(vTime).format('mm:ss');
+              value.videoModel.videoTimeStr = vTime;
+            });
+            this.data.lessonList = this.data.lessonList.concat(lessonList);
+            this.setData({
+              lessonList: this.data.lessonList
+            });
+            wx.setNavigationBarTitle({
+              title: this.data.lessonList[0].courseName
+            });
+            // 判断是否到底
+            if (res.data.lessonList.length < this.data.params.offSize) {
+              this.setData({
+                'params.nothing': true
+              })
+            } else {
+              this.data.params.offSet++;
+              this.setData({
+                params: this.data.params
+              })
+            }
+          }
+          this.setData({
+            "params.loading": false
+          })
+        }
+      },
+      /*async getList(cover) {
+
+        this.data.params.order=this.data.orderList[this.data.orderIndex].value;
+        this.data.params.gradeOrder=this.data.gradeList[this.data.gradeIndex].value;
+        if(this.data.myCollect){
+          if(this.data.lessonList.length===0){
+            this.data.params.offSet=0
+          }
+          let res = await this.$api.other.getMyCollectVideoList(this.data.params);
+          if (res.rcode === 300) {
+            //获取设置最大页数
+            if(res.data.videoList.length<=0){
+              this.data.params.totalPage=this.data.params.offSet;
+              this.setData({
+                params:this.data.params
+              })
+            }else{
+              if(cover){
+                this.data.lessonList=res.data.videoList;
+              }else{
+                this.data.lessonList=this.data.lessonList.concat(res.data.videoList);
+              }
+              this.setData({
+                lessonList: this.data.lessonList
+              })
+            }
+          }
+        }else{
+          let res = await this.$api.course.getCourseLesson(this.data.params);
+          if (res.rcode === 300) {
+            //获取设置最大页数
+            if(!res.data.lessonList){
+              this.data.params.totalPage=this.data.params.offSet;
+              this.setData({
+                params:this.data.params
+              })
+            }else{
+              if(cover){
+                this.data.lessonList=res.data.lessonList;
+              }else{
+                this.data.lessonList=this.data.lessonList.concat(res.data.lessonList);
+              }
+              this.data.lessonList.forEach((value)=>{
+                let vTime = value.videoModel.videoTime * 1000;
+                vTime = dayjs(vTime).format('mm:ss');
+                value.videoModel.videoTimeStr = vTime;
+              });
+              this.setData({
+                lessonList: this.data.lessonList
+              });
+              wx.setNavigationBarTitle({
+                title: this.data.lessonList[0].courseName
+              })
+            }
+          }
+        }
+      },*/
+      bindPickerChange(e){
+        let type=e.currentTarget.dataset.type;
+        let key=type+'Index';
+        let value=e.detail.value;
+        this.data[key]=value;
+        this.setData({
+          [key]:value
+        });
+        //重新设置分页加载数据
+        if(this.data.params.totalPage){
+          delete this.data.params.totalPage
+        }
+        this.data.params.offSet=1;
+        this.data.params.nothing=false;
+        this.setData({
+          lessonList: [],  // 切换picker选择的时候，先清空lessonList
+          params:this.data.params
+        });
+        wx.pageScrollTo({
+          scrollTop: 0,
+          duration: 0
+        });
+        this.getList(true);
+      }
+    },
+    onPageScroll({scrollTop}) {
+      this.setData({
+        'scrollTop': scrollTop
+      })
+    },
+    onReachBottom() {
+      if (!this.data.params.nothing) {
+        this.getList();
+      }
+    }
+    /*async onReachBottom() {
+      if (!this.data.params.totalPage || (this.data.params.totalPage && this.data.params.offSet < this.data.params.totalPage)) {
+        this.data.params.offSet++;
+        this.setData({
+          "params.loading": true
+        });
+        await this.getList();
+        this.setData({
+          "params.loading": false
+        })
+      } else {
+        this.setData({
+          'params.nothing': true
+        })
+      }
+    }*/
+  })
+</script>
+<style lang="scss" src="./videoList.scss"></style>

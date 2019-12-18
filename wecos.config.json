@@ -1,0 +1,12 @@
+{
+  "appDir": "./dist/assets",
+  "cos": {
+    "secret_id": "AKIDKZhjcKNIavDLOIkZwOn5LafYHqERuZVG",
+    "secret_key": "pUxFXcYJtIWZR9kAPSM4oV2OZZP4Yu6B",
+    "bucket": "qktlite-1253493352",
+    "region": "ap-guangzhou",
+    "folder": "/student/assets"
+  },
+  "uploadFileSuffix": [".jpg",".png",".gif",".webp",".svg"],
+  "uploadFileBlackList": ["./dist/assets/images/icon/"]
+}

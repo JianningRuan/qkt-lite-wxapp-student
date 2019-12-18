@@ -1,0 +1,296 @@
+<config>
+  {
+    "usingComponents": {
+      "baseNone": "../../../components/baseNone/baseNone.mina",
+      "pagation": "../../../components/pagation/pagation.mina",
+      "scroller-top": "../../../components/scroller-top/scroller-top.mina"
+    }
+  }
+</config>
+<template>
+  <view>
+      <view class=" pl-25 pr-25 pt-20">
+        <view class="box" wx:if="{{noticeList.length === 0}}">
+          <baseNone>
+            <view slot="tips">暂无消息</view>
+            <view slot="tipsText">老师尚未下发通知，先去其他地方看看吧</view>
+          </baseNone>
+        </view>
+        <view class="box msg-box mb-30" wx:for="{{noticeList}}" wx:for-item="notice" wx:key="{{notice.id}}" wx:for-index="nIndex" id="{{'box' + nIndex}}">
+          <view class="msg-author-box ml-25 mr-25 flex flex-pack-justify flex-align-center">
+            <view class="msg-author flex flex-align-center">
+              <view class="msg-head">
+                <image src="{{notice.pic}}" wx:if="{{notice.pic !== null && notice.pic !== undefined}}"></image>
+                <image src="../../../assets/images/common/teacher-head.png" wx:else></image>
+              </view>
+              <view class="msg-author-msg flex1 flex flex-v flex-pack-justify ml-20">
+                <view class="msg-name"><text>{{notice.teacherName}}</text></view>
+                <view class="msg-data">{{notice.createDay}}</view>
+              </view>
+            </view>
+            <view class="new" wx:if="{{notice.status === 0 && notice.noticeType !== 2}}"></view>
+            <view class="no-vote" wx:if="{{notice.endVote === 0 && notice.noticeType === 2}}">未投票</view>
+          </view>
+          <view class="msg-tit ml-25 mr-25 pt-20 pb-20 flex justify-between">
+            <view class="msg-icon mr-10">
+              <image src="../../../assets/images/msg/msg-icon.png" wx:if="{{notice.noticeType === 1}}"></image>
+              <image src="../../../assets/images/msg/vote-icon.png" wx:elif="{{notice.noticeType === 2}}"></image>
+            </view>
+            <view class="flex1">{{notice.title}}
+              <view class="pic-icon icon icon-pic ml-10" wx:if="{{notice.attachList.length !== 0}}"></view>
+            </view>
+          </view>
+          <view class="msg-cont pl-25 pr-25 pt-20 pb-20">
+            <view class="msg-text">{{notice.content}}</view>
+            <view class="msg-pic-wrapper flex flex-wrap-wrap">
+              <view class="msg-pic mb-10 mt-10" style="background-image: url({{attach.attachUrl}})" wx:for="{{notice.attachList}}" wx:for-item="attach" wx:key="attach.attachUrl" bind:tap="previewImage" data-src="{{attach.attachUrl}}" data-index="{{nIndex}}">
+              </view>
+            </view>
+
+            <!--投票-->
+            <view class="flex flex-align-end" wx:if="{{notice.noticeType === 2}}">
+              <radio-group class="radio-group flex1" bindchange="radioChange" data-index="{{nIndex}}" data-notice="{{notice}}">
+                <label class="radio-label mt-10 mb-10 flex justify-between" wx:for="{{notice.optionList}}" wx:for-item="option" wx:key="{{option.id}}" wx:for-index="oIndex">
+                  <radio value="{{option.id}}"/>
+                  <view class="radio mr-10 {{option.id === notice.answerOption? 'active': ''}}"></view>
+                  <view class="radio-text flex1">
+                    <text wx:if="{{oIndex === 0}}">A.</text>
+                    <text wx:elif="{{oIndex === 1}}">B.</text>
+                    <text wx:elif="{{oIndex === 2}}">C.</text>
+                    <text wx:elif="{{oIndex === 3}}">D.</text>
+                    <text wx:elif="{{oIndex === 4}}">E.</text>
+                    <text wx:elif="{{oIndex === 5}}">F.</text>
+                    <text wx:elif="{{oIndex === 6}}">G.</text>
+                    <text wx:elif="{{oIndex === 7}}">H.</text>
+                    <text wx:elif="{{oIndex === 8}}">I.</text>
+                    <text wx:elif="{{oIndex === 9}}">J.</text>
+                    <text wx:elif="{{oIndex === 10}}">K.</text>
+                    <text wx:else>L.</text>
+                    <text class="radio-text-cont">{{option.optionContent}}</text>
+                  </view>
+                </label>
+              </radio-group>
+              <button class="submit-vote" wx:if="{{notice.endVote === 0 && !notice.expired && notice.noticeType === 2}}" bind:tap="submitVote" data-vote="{{notice}}" data-index="{{nIndex}}">提交</button>
+            </view>
+            <!--投票-end-->
+
+          </view>
+        </view>
+
+      </view>
+    <pagation params="{{params}}" bg="blue"></pagation>
+    <scroller-top scrollTop="{{scrollTop}}"></scroller-top>
+
+    <view class="float-nav" wx:if="{{unReadCount > 3}}" bind:tap="goUnRead">
+      {{unReadCount}}条未读<view class="spread-icon icon icon-spread ml-10"></view>
+    </view>
+
+
+  </view>
+</template>
+<script>
+  import { Page } from '@tinajs/tina';
+  import dayjs from 'dayjs';
+  Page.define({
+    data: {
+      noticeList: [],
+      offSet: 0,
+      offSize: 10,
+      totalPages: 1,
+      unReadCount: 0,
+      topArr: 0,
+      params: {}
+    },
+    beforeLoad () {},
+    onLoad (options) {
+      let unReadCount = parseInt(options.unReadCount);
+      if (unReadCount !== 0){ // 如果有未读信息，则计算需要获取多少页
+        let offSize = parseInt(unReadCount / 10);
+        if (unReadCount%10 > 0){
+          offSize++;
+        }
+        this.setData({
+          offSize: offSize * 10
+        });
+      }
+      wx.setNavigationBarTitle({
+        title: '消息'
+      });
+      this.resStatus();
+      this.getMyNoticeList();
+    },
+    onReady () {},
+    onShow () {},
+    onHide () {},
+    onUnload () {},
+    compute () {},
+    onPageScroll({scrollTop}) {
+      this.setData({
+        'scrollTop': scrollTop
+      })
+    },
+    onReachBottom() {
+      this.getMyNoticeList();
+    },
+    methods: {
+      // 更新消息状态
+      async resStatus(){
+        let res = await this.$api.home.resStatus();
+        if (res.rcode === 300){
+
+        }
+      },
+      // 点击放大图片
+      previewImage(event){
+        let imgSrc = event.currentTarget.dataset.src;
+        let imgIndex = event.currentTarget.dataset.index;
+        let picList = this.data.noticeList[imgIndex].attachList;
+        let imgArr = [];
+        picList.forEach((value)=>{
+          imgArr.push(value.attachUrl);
+        });
+        wx.previewImage({
+          current: imgSrc, // 当前显示图片的http链接
+          urls: imgArr // 需要预览的图片http链接列表
+        });
+      },
+      // 获取消息列表
+      async getMyNoticeList(){
+        if (this.data.offSet > this.data.totalPages - 1){
+          this.setData({
+            'params.nothing': true
+          });
+          return
+        }
+        this.setData({
+          "params.loading": true
+        });
+        let params = {
+          offSet: this.data.offSet,
+          offSize: this.data.offSize
+        };
+        let res = await this.$api.home.getMyNoticeList(params);
+        if (res.rcode === 300){
+          let oriNoticeList = this.data.noticeList;
+          let noticeList = res.data.noticeList;
+          // 标记是否已投票
+          noticeList.forEach((value)=>{
+            if (value.answerOption === 0){
+              value.endVote = 0
+            }else {
+              value.endVote = 1
+            }
+            value.createDay = dayjs(value.createTime).format('MM月DD日 HH:ss');
+          });
+          noticeList = oriNoticeList.concat(noticeList);
+          let offSet = this.data.offSet;
+          offSet++;
+          this.setData({
+            unReadCount: res.data.unReadCount,
+            noticeList: noticeList,
+            offSet: offSet,
+            offSize: 10,
+            totalPages: res.data.totalPages
+          });
+          this.setData({
+            'params.loading': false
+          });
+
+          this.getTopArr();
+        }
+
+
+      },
+      // 投票选择
+      radioChange(event){
+        let notice = event.currentTarget.dataset.notice;
+        let index = Number(event.currentTarget.dataset.index);
+        if (notice.endVote !== 0){
+          return
+        }
+        if (notice.expired){
+          wx.showToast({
+            title: '投票已截止',
+            icon: 'none',
+            duration: 2000
+          });
+          return
+        }
+
+        let noticeList = this.data.noticeList;
+        noticeList[index].answerOption = Number(event.detail.value);
+        this.setData({
+          noticeList: noticeList
+        })
+      },
+      // 提交投票
+      submitVote(event){
+        let index = Number(event.currentTarget.dataset.index);
+        let notice = event.currentTarget.dataset.vote;
+        if (notice.answerOption === 0){
+          wx.showModal({
+            title: '提示',
+            content: '你还没勾选选项',
+            showCancel: false,
+            success(res) {}
+          });
+          return
+        }
+        let params = {
+          answerId: notice.answerOption,
+          id: notice.id
+        };
+        this.$api.home.saveMyVoted(params).then((res)=>{
+          if (res.rcode === 300){
+            let noticeList = this.data.noticeList;
+            noticeList[index].endVote = 1;
+            this.setData({
+              noticeList: noticeList
+            })
+          }else {
+            wx.showModal({
+              title: '提示',
+              content: res.message,
+              showCancel: false,
+              success(res) {}
+            })
+          }
+        });
+      },
+      getTopArr(){
+        let noticeList = this.data.noticeList;
+        let top = 0;
+        for(let i = noticeList.length - 1; i >= 0; i--){
+          if (noticeList[i].status === 0){
+            const query = wx.createSelectorQuery();
+            query.select(`#box${i}`).boundingClientRect();
+            query.selectViewport().scrollOffset();
+            query.exec((res)=>{
+              top = res[0].top;
+              this.setData({
+                topArr: top
+              })
+            });
+            return
+          }
+        }
+      },
+      // 去最后一条未读信息那
+      goUnRead(){
+        let topArr = this.data.topArr;
+        if (topArr > 0){
+          // 执行跳转
+          wx.pageScrollTo({
+            scrollTop: topArr,
+            duration: 300
+          });
+
+          this.setData({
+            unReadCount: 0
+          })
+        }
+      }
+    }
+  })
+</script>
+<style lang="scss" src="./msgList.scss"></style>

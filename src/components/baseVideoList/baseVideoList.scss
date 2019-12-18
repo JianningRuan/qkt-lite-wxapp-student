@@ -1,0 +1,125 @@
+@import "~@/assets/style/base.scss";
+@import "~@/assets/style/font.scss";
+
+.video-list {}
+.video-item {
+  padding-top: 40px;
+  background: #fff;
+  // animation: padding-up ease-out 0.5s;
+
+  &.bottom {
+    padding-bottom: 40px;
+    border-bottom: 1px solid $lineColor;
+  }
+
+  .video-cover {
+    width: 246px;
+    height: 164px;
+    border-radius: 14px;
+    position: relative;
+
+    image {
+      width: 100%;
+      height: 100%;
+      border-radius: 14px;
+    }
+    .time {
+      text-align: right;
+      position: absolute;
+      bottom: 14px;
+      right: 10px;
+      font-size: 20px;
+      color: #fff;
+    }
+    .video-cover-mark {
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      right: 0;
+      overflow: hidden;
+      border-radius: 14px;
+      .over-label {
+        position: absolute;
+        top: 0;
+        left: -50px;
+        width: 100px;
+        height: 46px;
+        text-align: center;
+        font-size: 24px;
+        color: #fff;
+        line-height: 60px;
+        transform: rotate(-45deg);
+        transform-origin: center top;
+
+        background: #61b8ea;
+      }
+    }
+
+    .progress-wrapper {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 14px;
+      border-radius: 7px;
+      background: #d2d2d2;
+      overflow: hidden;
+
+      .progress {
+        display: block;
+        height: 14px;
+        border-radius: 7px;
+        background: #fb8525;
+      }
+    }
+  }
+  .video-cont {
+    width: 410px;
+    .v-tit {
+      font-size: 32px;
+      color: #222;
+    }
+    .v-author {
+      font-size: 28px;
+      color: #222;
+    }
+    .v-msg {
+      font-size: 0;
+      color: #666;
+      line-height: 36px;
+
+      .v-msg-item  {
+        line-height: 36px;
+        font-size: 24px;
+        display: inline-block;
+        vertical-align: top;
+        text {
+          margin-right: 7px;
+          font-size: 32px;
+          width: 32px;
+          height: 32px;
+          display: inline-block;
+          vertical-align: top;
+        }
+        .fire-icon {
+          color: #FE911D;
+          font-size: 40px;
+        }
+        .msg-icon {
+          color: $fontColor;
+        }
+      }
+    }
+  }
+}
+
+@keyframes padding-up {
+  0% {
+    // padding-bottom: 0.6rem;
+    transform: translate(0, 60px);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}

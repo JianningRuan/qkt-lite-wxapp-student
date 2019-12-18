@@ -1,0 +1,174 @@
+<config>
+  {
+  "component": true,
+  }
+</config>
+<template>
+  <view>
+    <view class="register-banner">
+      <image class="banner" src="../../../assets/images/login/data-bg.jpg"></image>
+      <view class="register-banner-views">
+        <view class="title">完善资料</view>
+        <view class="cont">为了更好地<text>推荐相关学习资料和课程</text>给您，请填写您的基本资料。</view>
+      </view>
+      <view class="register-banner-footer"></view>
+    </view>
+    <view class="register-wrapper">
+      <view class="register-form">
+        <view class="flex flex-align-center flex-pack-justify register-box mt-20">
+          <view class="input-tit">姓名</view>
+          <input type="text" class="flex1 input-box" value="{{stuName}}" bindinput="bindKeyInput" placeholder="请输入学生姓名" />
+        </view>
+        <picker bindchange="bindPickerChange" value="{{gradeIndex}}" range="{{gradeArray}}" range-key="name">
+          <view class="flex flex-align-center flex-pack-justify register-box mt-20">
+            <view class="input-tit">年级</view>
+            <view class="flex1 flex flex-align-center">
+              <input disabled type="text" class="flex1 input-box" value="{{gradeName}}" placeholder="请选择" />
+              <view class="right-icon icon icon-right ml-20"></view>
+            </view>
+          </view>
+        </picker>
+      </view>
+      <view class="submit-btn" bind:tap="submitData">提交</view>
+    </view>
+  </view>
+</template>
+<script>
+  import {Page} from '@tinajs/tina';
+  import {tinax} from '@/store'
+  import wechat from '@/until/wechat'
+  Page.define({
+    mixins: [
+      tinax.connect({
+        getters (getters) {
+          return {
+            userInfo: getters.userInfo(),
+          };
+        },
+        actions ({setUserInfo}) {
+          return {
+            setUserInfo
+          }
+        },
+      }),
+    ],
+    data: {
+      opType: 'edit',
+      stuName: '',
+      gradeArray: [
+        {id: 1, name: '一年级'},
+        {id: 2, name: '二年级'},
+        {id: 3, name: '三年级'},
+        {id: 4, name: '四年级'},
+        {id: 5, name: '五年级'},
+        {id: 6, name: '六年级'},
+        {id: 7, name: '七年级'},
+        {id: 8, name: '八年级'},
+        {id: 9, name: '九年级'},
+      ],
+      gradeIndex: '',
+      grade: '', // id
+      gradeName: '',
+    },
+    beforeLoad() {
+    },
+    onLoad() {
+      if (this.$route.query.opType) {
+        this.setData({
+          opType: this.$route.query.opType
+        });
+      }
+      let tit = '';
+      if (this.data.opType === 'edit') {
+        tit = '完善资料';
+      } else {
+        tit = '新建用户';
+      }
+      wx.setNavigationBarTitle({
+        title: tit
+      });
+      if (this.data.opType === 'edit') {
+        this.setting();
+      }
+    },
+    onReady() {
+    },
+    onShow() {
+    },
+    onHide() {
+    },
+    onUnload() {
+    },
+    compute() {
+    },
+    methods: {
+      setting () {
+        if (this.data.userInfo.name !== '' && this.data.userInfo.name !== undefined) {
+          this.setData({
+            stuName: this.data.userInfo.name
+          })
+        }
+        if (this.data.userInfo.grade) {
+          for (let i = 0; i < 9; i++) {
+            if (this.data.userInfo.grade === this.data.gradeArray[i].id) {
+              this.setData({
+                gradeIndex: i,
+                grade: this.data.userInfo.grade,
+                gradeName: this.data.gradeArray[i].name,
+              })
+              break
+            }
+          }
+        }
+      },
+      bindKeyInput(e) {
+        this.setData({
+          stuName: e.detail.value
+        })
+      },
+      bindPickerChange(e) {
+        let index = e.detail.value;
+        this.setData({
+          gradeIndex: index,
+          gradeName: this.data.gradeArray[index].name,
+          grade: this.data.gradeArray[index].id
+        })
+      },
+      async submitData () {
+        if (this.data.stuName === '') {
+          this.$toast('请输入学生姓名');
+          return false
+        }
+        if (this.data.gradeIndex === '') {
+          this.$toast('请选择年级');
+          return false
+        }
+        let params = {
+          access_token: wx.getStorageSync('accessToken'),
+          grade: this.data.grade,
+          stuName: this.data.stuName,
+          op: this.data.opType
+        };
+        let res = await this.$api.user.updateInfo(params);
+        if (res.rcode === 300) {
+          if (this.data.opType === 'edit'){
+            await this.getUserInfo()
+            this.$router.redirect('/pages/home/home');
+          } else {
+            // this.$router.back()
+            this.$router.redirect('/pages/otherIndex/otherIndex');
+          }
+        } else {
+          this.$toast(res.message);
+        }
+      },
+      async getUserInfo(){
+        let res = await this.$api.user.getSetting();
+        if(res.rcode === 300){
+          this.setUserInfo(res.data);
+        }
+      },
+    }
+  })
+</script>
+<style src="./data.scss"></style>

@@ -1,0 +1,214 @@
+<config>
+  {
+  "usingComponents": {
+  "baseScrollVideo": "../../components/baseScrollVideo/baseScrollVideo.mina",
+  "baseNone": "../../components/baseNone/baseNone.mina",
+  "pagation": "../../components/pagation/pagation.mina",
+  "scroller-top": "../../components/scroller-top/scroller-top.mina",
+  "modal": "../../components/modal/modal.mina"
+  }
+  }
+</config>
+<template>
+  <view>
+    <view class="my-date-wrapper">
+      <image class="other-bg" src="../../assets/images/other/other-bg.jpg"></image>
+      <view class="my-head">
+        <image src="{{userInfo.pic}}" wx:if="{{userInfo.pic !== null && userInfo.pic !== undefined}}"></image>
+        <image src="../../assets/images/common/student-head.png" wx:else></image>
+      </view>
+      <view class="my-name pt-15 pb-15">{{userInfo.name}}</view>
+      <view class="my-school">
+        <text>{{userInfo.schoolName}}</text>
+        <text class="ml-10">{{userInfo.className}}</text>
+      </view>
+    </view>
+
+    <view class="list-box border">
+      <view class="list-item flex flex-align-center flex-pack-justify" bindtap="openChangeUserPop">
+        <view class="list-l flex flex-align-center">
+          <image class="list-icon" src="../../assets/images/other/user-icon.png"></image>
+          <view class="tit">切换角色</view>
+        </view>
+        <view class="right-icon iconfont icon-right"></view>
+      </view>
+      <view class="list-item flex flex-align-center flex-pack-justify" bindtap="goMyClass">
+        <view class="list-l flex flex-align-center">
+          <image class="list-icon" src="../../assets/images/other/class-icon.png"></image>
+          <view class="tit">我的班级</view>
+        </view>
+        <view class="right-icon iconfont icon-right"></view>
+      </view>
+    </view>
+
+    <view class="list-box border">
+      <view class="list-item flex flex-align-center flex-pack-justify" bindtap="goHistory">
+        <view class="list-l flex flex-align-center">
+          <image class="list-icon" src="../../assets/images/other/history-icon.png"></image>
+          <view class="tit">我的动态</view>
+        </view>
+        <view class="right-icon iconfont icon-right"></view>
+      </view>
+      <view class="list-item flex flex-align-center flex-pack-justify" bindtap="goCollection">
+        <view class="list-l flex flex-align-center">
+          <image class="list-icon" src="../../assets/images/other/collect-icon.png"></image>
+          <view class="tit">我的收藏</view>
+        </view>
+        <view class="right-icon iconfont icon-right"></view>
+      </view>
+    </view>
+
+    <view class="list-box">
+      <view class="list-item flex flex-align-center flex-pack-justify">
+        <view class="list-l flex flex-align-center">
+          <image class="list-icon" src="../../assets/images/other/serve-icon.png"></image>
+          <view class="tit">在线客服</view>
+        </view>
+        <view class="right-icon iconfont icon-right"></view>
+        <button open-type="contact">进入客服会话</button>
+      </view>
+    </view>
+  </view>
+
+
+  <view class="class-madel flex flex-align-center" wx:if="{{visible}}">
+    <view class="mask"></view>
+    <view class="class-madel-main">
+      <text class="iconfont icon-close modal-close" bindtap="toggleVisible"></text>
+      <view class="modal-header"><text>切换账号</text></view>
+      <view class="modal-body">
+        <view class="user-list-item flex flex-pack-justify flex-align-center pt-20 pb-20" wx:for="{{stuUserInfo}}" wx:key="{{item.id}}" catchtap="changeUser" data-user="{{item}}">
+          <view class="user-cont flex">
+            <view class="user-head mr-20">
+              <image src="{{item.pic}}" wx:if="{{item.pic !== null && item.pic !== undefined}}"></image>
+              <image src="../../assets/images/common/student-head.png" wx:else></image>
+            </view>
+            <view class="user-data flex1 flex flex-v flex-pack-justify">
+              <view class="user-name">{{item.name}}<text>学生</text></view>
+              <view class="user-school">{{item.className}}</view>
+            </view>
+          </view>
+          <view class="great-icon icon icon-great" wx:if="{{item.use}}"></view>
+        </view>
+        <view class="user-list-item pt-40 pb-40 flex" bind:tap="addNewRole">
+          <view class="add-icon icon icon-plus mr-40"></view>
+          <view class="add-text">添加新账号</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+
+
+  <scroller-top scrollTop="{{scrollTop}}"></scroller-top>
+</template>
+<script>
+  import { Page } from '@tinajs/tina';
+  import dayjs from 'dayjs'
+  import wechat from '@/until/wechat'
+  import {tinax} from '@/store'
+  Page.define({
+    mixins: [
+      tinax.connect({
+        getters (getters) {
+          return {
+            userInfo: getters.userInfo()
+          };
+        }
+      }),
+    ],
+    data: {
+      stuUserInfo:{},
+      visible: false,
+      showFooter: false
+    },
+    beforeLoad() {
+    },
+    onLoad() {
+      wx.setNavigationBarTitle({
+        title: '其他'
+      });
+    },
+    onReady() {
+    },
+    onShow() {},
+    onHide() {
+    },
+    onUnload() {
+    },
+    compute() {
+    },
+    methods: {
+      /* toMyAllCollect(){
+        this.$router.navigate(`/pages/video/videoList/videoList?type=myCollect`)
+      },
+      // 去收藏的视频的详情
+      goVideoDetail(event){
+        let id = event.currentTarget.dataset.id;
+        this.$router.navigate(`/pages/video/videoDetail/videoDetail?videoId=${id}`)
+      }, */
+      toggleVisible () {
+        this.setData({
+          visible: false
+        })
+      },
+      async getStudentList(){
+        let res= await this.$api.user.getStudentList();
+        if(res.rcode===300){
+          this.setData({
+            stuUserInfo:res.data
+          })
+        }
+      },
+      async changeUser(e){
+        let user=e.currentTarget.dataset.user;
+        if(!user.use){
+          let result= await wechat.showModal(`你确定要切换到${user.name}吗？`);
+
+          if(result){
+            let code = await wechat.getLoginCode();
+            let res= await this.$api.user.change({
+              changeId:user.id,
+              clientId:'lite',
+              secret:'qkt',
+              code,
+            });
+            if(res.rcode===300){
+              wx.setStorageSync('accessToken', res.data.access_token);
+              this.$router.redirect('/pages/login');
+            }
+          }
+        }
+      },
+      addNewRole() {
+        this.$router.navigate('/pages/login/data/data?opType=add');
+      },
+      async openChangeUserPop () {
+        await this.getStudentList()
+        this.setData({
+          visible: true
+        })
+      },
+      goMyClass () {
+        this.$router.navigate('/pages/other/classUserList/classUserList');
+      },
+      goHistory () {
+        this.$router.navigate('/pages/other/history/history');
+      },
+      goCollection () {
+        this.$router.navigate('/pages/other/collection/collection');
+      },
+    },
+    onPageScroll({scrollTop}) {
+      this.setData({
+        'scrollTop': scrollTop
+      })
+    },
+    onReachBottom() {
+      if (this.data.params.offSet < this.data.params.totalPage){
+        this.getFootstep();
+      }
+    }
+  })
+</script>
+<style lang="scss" src="./otherIndex.scss"></style>

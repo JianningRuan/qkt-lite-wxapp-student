@@ -1,0 +1,115 @@
+<config>
+  {
+    "component": true,
+    "navigationBarTitleText":"收藏",
+    "usingComponents": {
+      "baseNone": "../../../components/baseNone/baseNone.mina",
+      "pagation": "../../../components/pagation/pagation.mina",
+      "scroller-top": "../../../components/scroller-top/scroller-top.mina",
+    }
+  }
+</config>
+<template>
+  <view class="page-wrapper">
+    <view class="box-wrapper mb-20">
+      <view class="box-tit pl-10 ml-30 mr-30 mt-30 mb-30">
+        <text class="tit">我的收藏</text>
+      </view>
+      <view class="ml-35 collect-video-list">
+        <block wx:if="{{collects.length > 0}}">
+          <view class="collect-video-item" wx:for="{{collects}}" wx:key="{{item.id}}" bind:tap="goVideoDetail" data-id="{{item.id}}">
+            <view class="video-pic">
+              <image src="{{item.pic}}" mode="widthFix"></image>
+              <view class="video-play iconfont icon-play"></view>
+            </view>
+            <view class="name">{{item.name}}</view>
+          </view>
+        </block>
+        <block wx:else>
+          <baseNone>
+            <text slot="tips">暂无收藏视频</text>
+          </baseNone>
+        </block>
+      </view>
+    </view>
+  </view>
+
+  <scroller-top scrollTop="{{scrollTop}}"></scroller-top>
+</template>
+<script>
+  import {Page} from '@tinajs/tina';
+
+  Page.define({
+    data: {
+      collects:[],
+      params: {
+        offSize: 10,
+        offSet: 0,
+        nothing: false,
+        loading: false
+      },
+    },
+    beforeLoad() {
+    },
+    onLoad() {
+    },
+    onReady() {
+    },
+    onShow() {
+      this.data.params.offSet=0;
+      this.getMyCollectVideo(true);
+    },
+    onHide() {
+    },
+    onUnload() {
+    },
+    compute() {
+    },
+    methods: {
+      async getMyCollectVideo(cover){
+        this.setData({
+          "params.loading": true
+        });
+        let res =await this.$api.other.getMyCollectVideo(this.data.params);
+        if(res.rcode===300 && res.data !== null){
+          this.data.params.totalPage=res.data.collectCount;
+          this.data.params.offSet++;
+
+          if(cover){
+            this.data.collects=res.data.videoList;
+          }else{
+            this.data.collects.concat(res.data.videoList);
+          }
+          this.setData({
+            collects:this.data.collects,
+            params:this.data.params
+          })
+        }
+        this.setData({
+          "params.loading": false
+        });
+        if (this.data.params.totalPage === this.data.params.offSet){
+          this.setData({
+            'params.nothing': true
+          })
+        }
+      },
+      // 去收藏的视频的详情
+      goVideoDetail(event){
+        let id = event.currentTarget.dataset.id;
+        this.$router.navigate(`/pages/video/videoDetail/videoDetail?videoId=${id}`)
+      },
+    },
+    onPageScroll({scrollTop}) {
+      this.setData({
+        'scrollTop': scrollTop
+      })
+    },
+    onReachBottom() {
+      if (this.data.params.offSet < this.data.params.totalPage){
+        this.getMyCollectVideo();
+      }
+    }
+  })
+</script>
+<style lang="scss" src="./collection.scss"></style>

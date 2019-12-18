@@ -1,0 +1,271 @@
+<config>
+  {
+    "usingComponents": {
+      "baseAudio": "../../../components/baseAudio/baseAudio.mina"
+    }
+  }
+</config>
+<template>
+  <view class="full-page">
+    <view class="scroll-wrapper main-bg pt-30 pl-25 pr-25 pb-25">
+      <view class="box task-box pl-30 pr-30 pt-50 mt-50">
+        <view class="task-report-tit">
+          <image src="../../../assets/images/hw/hw-report-tit.png"></image>
+        </view>
+        <view class="flex flex-pack-justify flex-align-center">
+          <view class="box-tit flex flex-align-center mt-30 mb-30">
+            <view class="task-icon mr-20">
+              <image wx:if="{{model.subject === 1}}" src="../../../assets/images/home/cn-icon.png"></image>
+              <image wx:elif="{{model.subject === 2}}" src="../../../assets/images/home/math-icon.png"></image>
+              <image wx:else src="../../../assets/images/home/en-icon.png"></image>
+            </view>
+            <view class="task-tit-text">{{model.title}}</view>
+          </view>
+          <view class="task-state">
+            <text wx:if="{{model.status === 1}}">已完成</text>
+            <text wx:elif="{{model.status === 2}}">已评价</text>
+          </view>
+        </view>
+
+        <view class="box-cont pt-20 pb-20">
+          <view class="task-tit">完成时间</view>
+          <view class="task-text">{{createTime}}</view>
+        </view>
+
+        <view class="box-cont pt-20 pb-20">
+          <view class="task-tit">作业内容</view>
+          <view class="task-cont-box {{isShowMore? 'current' : ''}}"><!-- current-->
+            <!--口算-->
+            <block wx:if="{{model.itemList[0].contentType==4}}">
+              <view class="calc-result">
+                <view class="calc-result-item flex flex-align-center">
+                  <view class="key">作业要求：</view>
+                  <view class="value flex1">{{model.itemList[0].execTimeTotal}}分钟口算作业，达标分数{{model.itemList[0].execScore}}分</view>
+                </view>
+                <view class="calc-result-item flex flex-align-center">
+                  <view class="key">最高分数：</view>
+                  <view class="value flex1">{{model.itemList[0].bestScore}}分</view>
+                </view>
+                <view class="calc-result-item flex flex-align-center">
+                  <view class="key">是否及格：</view>
+                  <view class="value flex1">{{model.itemList[0].bestScore>=model.itemList[0].execScore?'及格':'不及格'}}</view>
+                </view>
+                <view class="calc-result-item flex flex-align-center">
+                  <view class="btn btn-primary flex1" catchtap="toCalcAgain">再次挑战</view>
+                </view>
+              </view>
+            </block>
+            <!--非口算-->
+            <block wx:else>
+              <block wx:for="{{model.itemList}}" wx:for-item="modelItem" wx:for-index="mIndex" wx:key="{{mIndex}}">
+                <view class="task-text pt-5 pb-5">{{mIndex + 1}}.{{modelItem.content}}
+                  <view class="check-btn" wx:if="{{modelItem.attachment !== '' && modelItem.attachment !== null}}" bind:tap="showAttachment" data-index="{{mIndex}}" data-show="{{modelItem.showAttachment}}">{{modelItem.showAttachment? '收起附件' : '查看附件'}}</view>
+                </view>
+                <!--附件-->
+                <view class="enclosure-wrapper flex flex-wrap-wrap pt-20" wx:if="{{modelItem.attachment !== '' && modelItem.attachment !== null && modelItem.showAttachment}}">
+                  <view class="enclosure-pic mr-10 mb-20" style="background-image: url({{attachmentItem}})" wx:for="{{modelItem.attachment}}" wx:for-item="attachmentItem" wx:key="{{attachmentItem}}" bind:tap="previewImage" data-src="{{attachmentItem}}" data-index="{{mIndex}}" data-type="enclosure">
+                  </view>
+                </view>
+                <!--附件-end-->
+                <!--图片-->
+                <view class="upload-wrapper flex flex-wrap-wrap pt-20" wx:if="{{modelItem.contentType === 2}}">
+                  <view class="upload-pic mr-10 mb-10" wx:for="{{modelItem.attachList}}" style="background-image: url({{attach.attachUrl}})" wx:for-item="attach" wx:for-index="aIndex" wx:key="{{aIndex}}" bind:tap="previewImage" data-src="{{attach.attachUrl}}" data-index="{{mIndex}}" data-type="upload"></view>
+                </view>
+                <!--图片-end-->
+                <!--录音-->
+                <view class="upload-wrapper flex flex-wrap-wrap pt-20" wx:if="{{modelItem.contentType === 3}}">
+                  <view class="upload-sound mr-10 mb-10 flex flex-v" wx:for="{{modelItem.attachList}}" wx:for-item="attach" wx:for-index="aIndex" wx:key="{{aIndex}}">
+                    <view class=" flex1 upload-sound-bg flex flex-pack-center flex-align-center">
+                      <view class="play-btn icon {{attach.isPlay ? 'icon-stop-btn' : 'icon-play-btn'}}" bind:tap="playSound" data-parentIndex="{{mIndex}}" data-index="{{aIndex}}" data-src="{{attach.attachUrl}}"></view>
+                    </view>
+                    <view class="upload-duration">{{attach.audioClock}}</view>
+                  </view>
+                </view>
+                <!--录音-end-->
+              </block>
+            </block>
+          </view>
+          <!--<view class="show-btn-wrapper flex flex-h-r">
+            <view class="show-btn {{isShowMore? 'current' : ''}}" bind:tap="showMore">
+              <text>全部</text><view class="open-icon icon icon-spread ml-10"></view>
+            </view>
+          </view>-->
+
+        </view>
+
+        <view class="box-cont pt-20 pb-20" wx:if="{{model.status === 2}}">
+          <view class="task-tit">老师评语</view>
+          <view class="task-text">{{model.comment}}</view>
+        </view>
+
+      </view>
+    </view>
+
+    <baseAudio src="{{src}}" bind:toPlay="toSoundPlay" bind:toStop="soundStop" bind:onEnded="soundStop" />
+
+  </view>
+</template>
+<script>
+    import { Page } from '@tinajs/tina';
+    import dayjs from 'dayjs';
+
+    Page.define({
+        data: {
+          isShowMore: false,
+          id: '',
+          model: {},
+          imgSrc: '',
+          showSrc: false,
+          src: '',
+          soundIndex: '',
+          soundParentIndex: ''
+        },
+        beforeLoad() {
+        },
+        onLoad(options) {
+          wx.setNavigationBarTitle({
+            title: '作业成绩单'
+          });
+          if(this.$route.query.id){
+            this.recordId=this.$route.query.id;
+            this.setData({
+              id: this.$route.query.id
+            });
+            this.getHwDetail();
+          }
+
+        },
+        onReady() {
+        },
+        onShow() {
+        },
+        onHide() {
+          this.leavePage();
+        },
+        onUnload() {
+          this.leavePage();
+        },
+      compute({ model }) {
+        return {
+          createTime: dayjs(model.createTime).format('YYYY.MM.DD HH:mm')
+        }
+      },
+        methods: {
+          showMore(){
+            let isShowMore = this.data.isShowMore;
+            this.setData({
+              isShowMore: !isShowMore
+            })
+          },
+          // 点击放大图片
+          previewImage(event){
+            let imgSrc = event.currentTarget.dataset.src;
+            let imgIndex = event.currentTarget.dataset.index;
+            let type = event.currentTarget.dataset.type;
+            let imgArr = [];
+            if (type === 'enclosure') { // 附件
+              imgArr = this.data.model.itemList[imgIndex].attachment;
+            } else {
+              let picList = this.data.model.itemList[imgIndex].attachList;
+              if(picList){
+                picList.forEach((value)=>{
+                  imgArr.push(value.attachUrl);
+                });
+              }
+            }
+            wx.previewImage({
+              current: imgSrc, // 当前显示图片的http链接
+              urls: imgArr // 需要预览的图片http链接列表
+            });
+          },
+          async getHwDetail(){
+            let params = {
+              homeworkRecordId: this.data.id
+            };
+            let res = await this.$api.hw.getMyHomeworkDetail(params);
+            if (res.rcode === 300){
+              let model = res.data.model;
+              model.itemList.forEach((value)=>{
+                let attachment = value.attachment;
+                if (attachment !== '' && attachment !== null){
+                  value.attachment = attachment.split(',');
+                }
+                value.showAttachment = false;
+                if (value.contentType === 3) {
+                  value.attachList.forEach((item)=>{
+                    let min=Math.floor(item.audioTime/60);
+                    let seconds=item.audioTime - (min*60);
+                    if(min<10){
+                      min='0'+min;
+                    }
+                    if(seconds<10){
+                      seconds='0'+seconds;
+                    }
+                    item.audioClock = `${min}:${seconds}`;
+                  })
+                }
+
+              });
+              this.setData({
+                model: model
+              })
+            }
+          },
+          // 展示或说起附件
+          showAttachment(event){
+            let index = event.currentTarget.dataset.index;
+            let show = event.currentTarget.dataset.show;
+            let model = this.data.model;
+            model.itemList[index].showAttachment = !show;
+            this.setData({
+              model: model
+            })
+          },
+          // 播放音频
+          playSound(e) {
+            let index = parseInt(e.currentTarget.dataset.index);
+            let parentIndex = parseInt(e.currentTarget.dataset.parentindex);
+            let src = e.currentTarget.dataset.src;
+            if (this.data.src === ''){
+              this.setData({
+                src: src,
+                soundIndex: index,
+                soundParentIndex: parentIndex
+              })
+            } else {
+              this.setData({
+                src: ''
+              })
+            }
+          },
+          // 监听播放回调
+          toSoundPlay() {
+            this.data.model.itemList[this.data.soundParentIndex].attachList[this.data.soundIndex].isPlay = true;
+            this.setData({
+              model: this.data.model
+            })
+          },
+          // 音频播放停止
+          soundStop() {
+            if(this.data.soundParentIndex!=='' && this.data.soundIndex!==''){
+              this.data.model.itemList[this.data.soundParentIndex].attachList[this.data.soundIndex].isPlay = false;
+            }
+            this.setData({
+              model: this.data.model,
+              soundIndex: '',
+              soundParentIndex: '',
+              src: ''
+            })
+          },
+          //离开页面时的设置 退出页面或者后台
+          leavePage(){
+            this.soundStop();
+          },
+          //再次挑战
+          toCalcAgain(){
+            this.$router.navigate(`/pages/fastReckon/reckonChallenge/reckonChallenge?workId=${this.recordId}&homeworkItemId=${this.data.model.itemList[0].id}`);
+          }
+        }
+    })
+</script>
+<style lang="scss" src="./hwReport.scss"></style>

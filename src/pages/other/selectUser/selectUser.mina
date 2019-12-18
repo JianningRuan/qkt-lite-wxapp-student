@@ -1,0 +1,102 @@
+<config>
+  {
+    "navigationBarTitleText":"切换其他用户",
+    "usingComponents": {
+      "baseNone": "../../../components/baseNone/baseNone.mina",
+    }
+  }
+</config>
+<template>
+  <view class="full-page main-bg">
+    <view class="main pl-30 pr-30 pt-30">
+      <view class="box user-list pl-30 pr-30">
+        <block wx:if="{{userList.length>0}}">
+          <view class="user-list-item flex flex-pack-justify flex-align-center pt-20 pb-20" wx:for="{{userList}}" wx:key="{{item.id}}" catchtap="changeUser" data-user="{{item}}">
+            <view class="user-cont flex">
+              <view class="user-head mr-20">
+                <image src="{{item.pic}}" wx:if="{{item.pic !== null && item.pic !== undefined}}"></image>
+                <image src="'../../../assets/images/common/student-head.png" wx:else></image>
+              </view>
+              <view class="user-data flex1 flex flex-v flex-pack-justify">
+                <view class="user-name">{{item.name}}<text>学生</text></view>
+                <view class="user-school">{{item.className}}</view>
+              </view>
+            </view>
+            <view class="great-icon icon icon-great" wx:if="{{item.use}}"></view>
+          </view>
+        </block>
+        <block wx:else>
+          <baseNone>
+            <text slot="tips">暂无其他可切换账号</text>
+          </baseNone>
+        </block>
+
+
+
+        <view class="user-list-item pt-40 pb-40 flex" bind:tap="addNewRole">
+          <view class="add-icon icon icon-plus mr-40"></view>
+          <view class="add-text">添加新账号</view>
+        </view>
+
+      </view>
+    </view>
+  </view>
+</template>
+<script>
+    import { Page } from '@tinajs/tina';
+    import wechat from '@/until/wechat'
+
+    Page.define({
+        data: {
+          userList:[]
+        },
+        beforeLoad() {
+        },
+        onLoad() {},
+        onReady() {
+        },
+        onShow() {
+          this.getStudentList();
+        },
+        onHide() {
+        },
+        onUnload() {
+        },
+        compute() {
+        },
+        methods: {
+          async getStudentList(){
+            let res= await this.$api.user.getStudentList();
+            if(res.rcode===300){
+              this.setData({
+                userList:res.data
+              })
+            }
+          },
+          async changeUser(e){
+            let user=e.currentTarget.dataset.user;
+            if(!user.use){
+              let result= await wechat.showModal(`你确定要切换到${user.name}吗？`);
+
+              if(result){
+                let code = await wechat.getLoginCode();
+                let res= await this.$api.user.change({
+                  changeId:user.id,
+                  clientId:'lite',
+                  secret:'qkt',
+                  code,
+                });
+                if(res.rcode===300){
+                  wx.setStorageSync('accessToken', res.data.access_token);
+                  this.$router.redirect('/pages/login');
+                }
+              }
+            }
+          },
+          addNewRole() {
+            this.$router.navigate('/pages/login/personalData/personalData?opType=add');
+          }
+        }
+    })
+</script>
+<style lang="scss" src="./selectUser.scss"></style>

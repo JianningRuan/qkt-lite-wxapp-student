@@ -1,0 +1,20 @@
+@import "./../../assets/style/base.scss";
+
+.none-wrapper {
+  .none-pic {
+    @include fullPic(230px, 206px);
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .none-tips {
+    font-size: 32px;
+    text-align: center;
+    line-height: 36px;
+    color: #333333;
+  }
+  .none-tips-text {
+    text-align: center;
+    line-height: 36px;
+    color: #999999;
+  }
+}

@@ -1,0 +1,571 @@
+<config>
+  {
+    "usingComponents": {
+      "baseAudio": "../../../components/baseAudio/baseAudio.mina"
+    }
+  }
+</config>
+<template>
+  <view class="full-page">
+    <view class="scroll-wrapper main-bg pt-30 pl-25 pr-25 pb-25">
+      <view class="box task-box pl-30 pr-30 mb-30">
+
+        <view class="box-tit flex flex-align-center mt-30 mb-30">
+          <view class="task-icon mr-20">
+            <image wx:if="{{model.subject === 1}}" src="../../../assets/images/home/cn-icon.png"></image>
+            <image wx:elif="{{model.subject === 2}}" src="../../../assets/images/home/math-icon.png"></image>
+            <image wx:else src="../../../assets/images/home/en-icon.png"></image>
+          </view>
+          <view class="task-tit-text">{{model.title}}</view>
+        </view>
+
+        <view class="box-cont pt-20 pb-20">
+          <view class="task-tit">作业截止时间</view>
+          <view class="task-text">{{submitDate}}</view>
+        </view>
+
+        <view class="box-cont pt-20 pb-20">
+          <view class="task-tit">作业内容</view>
+
+          <block wx:for="{{model.itemList}}" wx:for-item="modelItem" wx:for-index="mIndex" wx:key="{{mIndex}}">
+            <view class="task-text pt-5 pb-5">
+              <text class="mr-20">{{mIndex + 1}}.{{modelItem.content}}</text>
+              <view class="check-btn" wx:if="{{modelItem.attachment !== '' && modelItem.attachment !== null}}" bind:tap="showAttachment" data-index="{{mIndex}}" data-show="{{modelItem.showAttachment}}">{{modelItem.showAttachment? '收起附件' : '查看附件'}}</view>
+            </view>
+            <!--附件-->
+            <view class="enclosure-wrapper flex flex-wrap-wrap pt-20" wx:if="{{modelItem.attachment !== '' && modelItem.attachment !== null && modelItem.showAttachment}}">
+              <view class="enclosure-pic mr-10 mb-20" style="background-image: url('{{attachmentItem}}')"  wx:for="{{modelItem.attachment}}" wx:for-item="attachmentItem" wx:key="{{attachmentItem}}" bind:tap="previewImage" data-src="{{attachmentItem}}" data-index="{{mIndex}}" data-type="enclosure"></view>
+            </view>
+            <!--附件-end-->
+            <!--图片-->
+            <view class="upload-wrapper flex flex-wrap-wrap pt-20" wx:if="{{modelItem.contentType === 2}}">
+              <view class="upload-pic mr-10 mb-10" style="background-image: url('{{attach.attachUrl}}')" wx:for="{{modelItem.attachList}}" wx:for-item="attach" wx:for-index="aIndex" wx:key="{{aIndex}}" bind:tap="previewImage" data-src="{{attach.attachUrl}}" data-index="{{mIndex}}" data-type="upload">
+                <view class="close-btn icon icon-close" catchtap="delAttach" data-parentIndex="{{mIndex}}" data-index="{{aIndex}}"></view>
+              </view>
+              <view class="upload-btn mr-10 mb-10 flex flex-pack-center flex-align-center" wx:if="{{modelItem.attachList.length < 3}}" data-index="{{mIndex}}" bind:tap="addImage">
+                <image class="add-img" src="./../../../assets/images/hw/add-img.png" mode="aspectFit"></image>
+              </view>
+            </view>
+            <!--图片-end-->
+            <!--录音-->
+            <view class="upload-wrapper flex flex-wrap-wrap pt-20" wx:if="{{modelItem.contentType === 3}}">
+              <view class="upload-sound mr-10 mb-10 flex flex-v" wx:for="{{modelItem.attachList}}" wx:for-item="attach" wx:for-index="aIndex" wx:key="{{aIndex}}">
+                <view class=" flex1 upload-sound-bg flex flex-pack-center flex-align-center">
+                  <view class="play-btn icon {{attach.isPlay ? 'icon-stop-btn' : 'icon-play-btn'}}" bind:tap="playSound" data-parentIndex="{{mIndex}}" data-index="{{aIndex}}" data-src="{{attach.attachUrl}}"></view>
+                </view>
+                <view class="upload-duration">{{attach.audioClock}}</view>
+                <view class="close-btn icon icon-close" bind:tap="delAttach" data-parentIndex="{{mIndex}}" data-index="{{aIndex}}"></view>
+              </view>
+              <view class="upload-btn mr-10 mb-10 flex flex-pack-center flex-align-center" wx:if="{{modelItem.attachList.length < 2}}" data-index="{{mIndex}}" bind:tap="addSound">
+                <image class="add-record" src="./../../../assets/images/hw/add-record.png" mode="aspectFit"></image>
+              </view>
+            </view>
+            <!--录音-end-->
+          </block>
+
+        </view>
+
+      </view>
+
+      <view class="box submit-btn mb-40" bind:tap="submitHw">确认完成并上交</view>
+    </view>
+
+    <!--录音弹层-->
+    <view class="mask" wx:if="{{showSoundPop}}"></view>
+    <view class="sound-pop-wrapper pt-40 pb-30" wx:if="{{showSoundPop}}">
+      <view class="close-btn icon icon-close" catchtap="closeSoundPop"></view>
+      <view class="play-btn-wrapper {{transition?'transition':''}}" catchtap="playNowSound">
+        <view class="play-animate" wx:if="{{transition}}">
+          <view></view>
+          <view></view>
+          <view></view>
+          <view></view>
+        </view>
+        <view class="play-btn icon icon-sound" wx:if="{{recordUrl === ''}}"></view>
+        <view class="play-btn icon {{isPlay ? 'icon-stop-block' : 'icon-play-arrow'}}" wx:else></view>
+      </view>
+      <view class="record-tips {{isRecording? 'recording': ''}}">
+        <text wx:if="{{recordUrl === '' && !isRecording}}">未录音</text>
+        <text wx:elif="{{recordUrl === '' && isRecording}}">● 录音中</text>
+        <text wx:else>录音完成</text>
+      </view>
+      <view class="record-time">{{recordClock}}</view>
+      <view class="btn-wrapper" wx:if="{{recordUrl === ''}}">
+        <view class="record-btn blue-btn mt-20" catch:touchstart="goRecord" catch:touchend="endRecord" wx:if="{{getAudioAuth}}">按住录音</view>
+        <button class="record-btn blue-btn mt-20" open-type="openSetting" bindopensetting="openSettingCallback"  wx:else>授权录音功能</button>
+      </view>
+      <view class="btn-wrapper" wx:else>
+        <view class="record-btn blue-btn mt-20" catch:tap="finishRecord">完成录音</view>
+        <view class="record-btn white-btn mt-20" catch:tap="reRecord">重新录制</view>
+      </view>
+    </view>
+    <!--录音弹层-end-->
+
+    <baseAudio src="{{src}}" bind:toPlay="toSoundPlay" bind:toStop="soundStop" bind:onEnded="soundStop" />
+  </view>
+</template>
+<script>
+    import { Page } from '@tinajs/tina';
+    import dayjs from 'dayjs';
+    import wechat from './../../../until/wechat'
+
+    Page.define({
+        data: {
+          id: '',
+          model: {},
+          showSoundPop: false, // 是否显示录音弹层
+          recordUrl: '', // 录音的地址
+          recordTime: 0, // 录音时长
+          isRecording: false, // 是否正在录音
+          // timer: '', // 倒计时方法
+          mIndex: '', // 当前录音是哪个作业细项
+          src: '',
+          soundIndex: '',
+          soundParentIndex: '',
+          isPlay: false, // 弹层中的音频是否正在播放
+          playPopSound: false, // 是否在播放弹层中的音频
+          getAudioAuth:true,//是否获取录音授权
+          transition:false,//是否开始过渡动画
+        },
+        beforeLoad() {
+        },
+        async onLoad(options) {
+
+
+          //获取用户授权录音权限状态
+          let result=await wechat.getAuthorize('scope.record');
+          this.setData({
+            getAudioAuth:result
+          });
+
+          this.setData({
+            id: Number(options.id)
+          });
+          this.getHwDetail();
+          this.recorderManager = wx.getRecorderManager();
+          this.recorderManager.onStart(() => {});
+          this.recorderManager.onStop((res) => {
+            clearInterval(this.timer);
+            this.timer=null;
+
+            this.data.isRecording = false;
+            this.setData({
+              isRecording: this.data.isRecording,
+              transition:false
+            })
+
+
+            if (res.duration < 1000) {
+              // 提示 录音时间过短
+              wx.showToast({
+                title: '录音时间过短',
+                icon: 'none',
+                duration: 2000
+              });
+              return
+            }
+            this.data.recordUrl = res.tempFilePath;
+            this.data.recordTime = parseInt(res.duration/1000);
+            this.setData({
+              recordUrl: this.data.recordUrl,
+              recordTime: this.data.recordTime
+            })
+
+          })
+
+        },
+        onReady() {
+          wx.setNavigationBarTitle({
+            title: '交作业'
+          });
+
+        },
+        onShow() {
+        },
+        onHide() {
+          this.leavePage();
+        },
+        onUnload() {
+          this.leavePage();
+        },
+        compute({ model, recordTime }) {
+          return {
+            submitDate: dayjs(model.submitDate).format('YYYY.MM.DD HH:mm'),
+            recordClock: dayjs(recordTime * 1000).format('mm:ss')
+          }
+        },
+        methods: {
+          // 点击放大图片
+          previewImage(event){
+            let imgSrc = event.currentTarget.dataset.src;
+            let imgIndex = event.currentTarget.dataset.index;
+            let type = event.currentTarget.dataset.type;
+            let imgArr = [];
+            if (type === 'enclosure') { // 附件
+              imgArr = this.data.model.itemList[imgIndex].attachment;
+            } else {
+              let picList = this.data.model.itemList[imgIndex].attachList;
+              picList.forEach((value)=>{
+                imgArr.push(value.attachUrl);
+              });
+            }
+            wx.previewImage({
+              current: imgSrc, // 当前显示图片的http链接
+              urls: imgArr // 需要预览的图片http链接列表
+            });
+          },
+          async getHwDetail(){
+            let params = {
+              homeworkRecordId: this.data.id
+            };
+
+            let res = await this.$api.hw.getMyHomeworkDetail(params);
+            if (res.rcode === 300){
+              let model = res.data.model;
+              model.itemList.forEach((value)=>{
+
+                let attachment = value.attachment;
+                if (attachment !== '' && attachment !== null){
+                  value.attachment = attachment.split(',');
+                }
+                if(value.attachList && value.attachList.length>0){
+                  value.attachList.map((item)=>{
+                    item.audioClock=dayjs(item.audioTime * 1000).format('mm:ss');
+                  });
+                }
+                value.showAttachment = false;
+              });
+              this.setData({
+                model: model
+              })
+            }
+          },
+          // 展示或说起附件
+          showAttachment(event){
+            let index = event.currentTarget.dataset.index;
+            let show = event.currentTarget.dataset.show;
+            let model = this.data.model;
+            model.itemList[index].showAttachment = !show;
+            this.setData({
+              model: model
+            })
+          },
+          // 添加图片
+          async addImage(event){
+            let index = event.currentTarget.dataset.index;
+            let maxImgLength = 3;
+            if (this.data.model.itemList[index].attachList.length >= 3){
+              // 提示已到上传上限
+              return false;
+            }
+            maxImgLength = maxImgLength - this.data.model.itemList[index].attachList.length;
+            let res = await wechat.chooseImage(maxImgLength);
+            wx.showLoading({
+              title: '加载中',
+              mask:true
+            });
+            let uploadRes= await wechat.upload(res,1,'work');
+            wx.hideLoading();
+            uploadRes.map((item)=>{
+              this.data.model.itemList[index].attachList.push({attachUrl:item});
+            });
+            this.setData({
+              model: this.data.model
+            });
+          },
+          // 删除图片或音频
+          delAttach(event){
+            let parentIndex = event.currentTarget.dataset.parentindex;
+            let index = event.currentTarget.dataset.index;
+            let model = this.data.model;
+            model.itemList[parentIndex].attachList.splice(index, 1);
+            this.setData({
+              model: model,
+              src:''
+            })
+          },
+          // 提交作业
+          async submitHw(){
+            wx.showLoading({
+              title: '正在提交...',
+              mask:true
+            });
+            let model = this.data.model;
+            let homeworkItems = [];
+
+            // 上传到腾讯云
+            // let uploadImgArr = []; // 上传的图片集合
+            // let uploadImgArrLength = []; // 上传图片分类数量合集 记录每一个小项有多少个图片
+            let uploadSoundArr = []; // 录音合集
+            let uploadSoundArrLength = []; // 录音分类数量合集
+            // 判断是否存在空
+            for (let i = 0; i < model.itemList.length; i++){
+              let itemList = model.itemList[i];
+              let imgLength = itemList.attachList?itemList.attachList.length:0;
+              if (imgLength === 0 && itemList.contentType !== 1){
+                wx.hideLoading();
+                wx.showModal({
+                  title: '提示',
+                  content: '请先上传照片或录音再提交',
+                  showCancel: false,
+                  success (res) {}
+                });
+                return
+              }
+            }
+            model.itemList.forEach((value)=>{
+              if (value.contentType === 3) {
+                let attachLength = value.attachList.length;
+                uploadSoundArrLength.push(attachLength);
+                value.attachList.forEach((item)=>{
+                  let url=item.oriUrl?item.oriUrl:item.attachUrl;
+                  uploadSoundArr.push(url);
+                })
+              }
+            });
+
+            let res = await  wechat.upload(uploadSoundArr, 2, 'work'); // 并发
+
+            let soundIndex = 0;
+            let soundLengthIndex = 0; // 指向uploadSoundArrLength的第几个
+
+            model.itemList.forEach((value, index)=>{
+              let endAttachArr = [];
+              if (value.contentType === 2){
+                value.attachList.map(item=>{
+                  item.attachType=1;
+                });
+                endAttachArr=value.attachList;
+              }else if (value.contentType === 3) {
+                let soundArr = res.slice(soundIndex, soundIndex + uploadSoundArrLength[soundLengthIndex]);
+                soundArr.forEach((item, sIndex)=>{
+                  let endSound = {
+                    attachType: 2,
+                    attachUrl: item,
+                    audioTime: value.attachList[sIndex].audioTime
+                  };
+                  endAttachArr.push(endSound)
+                });
+                value.endAttachList = endAttachArr;
+                soundIndex = soundIndex + uploadSoundArrLength[soundLengthIndex];
+                soundLengthIndex++;
+              }
+
+              let homeworkItem = {
+                attachList: endAttachArr,
+                itemId: value.id,
+                type: value.contentType
+              };
+              homeworkItems.push(homeworkItem);
+            });
+
+            let params = {
+              homeworkItems: homeworkItems,
+              recordId: this.data.id
+            };
+
+            let result = await this.$api.hw.saveMyHomework(params);
+            wx.hideLoading();
+            if (result.rcode === 300){
+              // this.$router.redirect('/pages/hw/hwList/hwList');
+              /* wx.reLaunch({
+                url: '/pages/hw/hwList/hwList'
+              }) */
+              this.$message.success('提交成功').then(()=>{
+                wx.navigateBack({
+                  delta: 1
+                });
+              });
+            }
+          },
+          // 点击弹出录音层
+          addSound(e){
+            this.data.showSoundPop = true;
+            this.data.mIndex = parseInt(e.currentTarget.dataset.index);
+            this.setData({
+              showSoundPop: this.data.showSoundPop,
+              mIndex: this.data.mIndex
+            });
+            // 如果当前正在播放录音，则停止播放
+            if (this.data.src !== '') {
+              this.setData({
+                src: ''
+              })
+            }
+          },
+          // 关闭录音层
+          closeSoundPop() {
+            this.data.recordUrl = '';
+            this.data.recordTime = 0;
+            this.data.showSoundPop = false;
+            this.data.mIndex = '';
+            this.setData({
+              recordUrl: this.data.recordUrl,
+              recordTime: this.data.recordTime,
+              showSoundPop: this.data.showSoundPop,
+              mIndex: this.data.mIndex,
+              src:'',
+              transition:false
+            })
+          },
+          // 开始录音
+          goRecord() {
+            if(!this.timer){
+              this.data.isRecording = true;
+              this.setData({
+                isRecording: this.data.isRecording,
+                transition:true
+              });
+              const options = {
+                duration: 180000,
+                format: 'mp3'
+              };
+              this.recorderManager.start(options);
+              this.timer = setInterval(()=>{
+                this.data.recordTime++;
+                this.setData({
+                  recordTime: this.data.recordTime > 180 ? 180 : this.data.recordTime
+                });
+                /*if (this.data.recordTime > 180){
+                  this.endRecord();
+                }*/
+              }, 1000)
+            }
+          },
+          // 结束录音
+          endRecord() {
+            this.recorderManager.stop();
+
+          },
+          // 完成录音
+          finishRecord(){
+            let params = {
+              oriUrl: this.data.recordUrl,
+              attachUrl: this.data.recordUrl,
+              audioTime: this.data.recordTime,
+              audioClock: dayjs(this.data.recordTime * 1000).format('mm:ss'),
+              isPlay: false
+            };
+            this.data.model.itemList[this.data.mIndex].attachList.push(params);
+            this.setData({
+              model: this.data.model,
+              src:'',
+              transition:false
+            });
+
+            this.closeSoundPop();
+          },
+          // 重新录制
+          reRecord() {
+            this.data.recordUrl = '';
+            this.data.recordTime = 0;
+            this.setData({
+              recordUrl: this.data.recordUrl,
+              recordTime: this.data.recordTime,
+              src:'',
+              transition:false
+            })
+          },
+          // 播放音频
+          playSound(e) {
+            let index = parseInt(e.currentTarget.dataset.index);
+            let parentIndex = parseInt(e.currentTarget.dataset.parentindex);
+            let src = e.currentTarget.dataset.src;
+            if (this.data.src === ''){
+              this.setData({
+                src: src,
+                soundIndex: index,
+                soundParentIndex: parentIndex
+              })
+            } else {
+              this.setData({
+                src: ''
+              })
+            }
+          },
+          // 监听播放回调
+          toSoundPlay() {
+            if (this.data.isPlay) { // 如果是播放弹层中的音频
+              return
+            }
+            this.data.model.itemList[this.data.soundParentIndex].attachList[this.data.soundIndex].isPlay = true;
+            this.setData({
+              model: this.data.model
+            })
+          },
+          // 音频播放停止
+          soundStop() {
+            if (this.data.isPlay) {
+              this.setData({
+                isPlay: false,
+                transition:false,
+                src:''
+              })
+            } else {
+              this.data.model.itemList[this.data.soundParentIndex].attachList[this.data.soundIndex].isPlay = false;
+              this.setData({
+                model: this.data.model,
+                soundIndex: '',
+                soundParentIndex: '',
+                src: '',
+                transition:false
+              })
+            }
+
+          },
+          // 播放当前录音
+          playNowSound() {
+            if(this.data.isPlay){
+              this.setData({
+                src: '',
+                transition:false
+              })
+            }else{
+              if(this.data.recordUrl!==''){
+                if (this.data.src === '') {
+                  this.data.isPlay = true;
+                  this.data.src = this.data.recordUrl;
+                  this.setData({
+                    isPlay: this.data.isPlay,
+                    src: this.data.src,
+                    transition:true
+                  })
+                } else {
+                  this.data.src = '';
+                  this.setData({
+                    src: this.data.src,
+                    transition:true
+                  })
+                }
+              }
+            }
+          },
+          //在打开授权设置页后回调
+          openSettingCallback(e){
+            if(e.detail.authSetting['scope.record']){
+              this.setData({
+                getAudioAuth:true
+              })
+            }else{
+              this.$toast('请先授权录音功能');
+            }
+          },
+          //离开页面时的设置 退出页面或者后台
+          leavePage(){
+            if(this.data.soundParentIndex!=='' && this.data.soundIndex!==''){
+              this.data.model.itemList[this.data.soundParentIndex].attachList[this.data.soundIndex].isPlay = false;
+            }
+            this.setData({
+              model:this.data.model,
+              src:'', //停止播放语音
+              transition:false,//停止播放状态
+              isRecording:false,//停止录音状态
+            });
+            this.recorderManager.stop();//停止录音
+            clearInterval(this.timer);//停止录音计时
+            this.timer=null;
+          }
+        }
+    })
+</script>
+<style lang="scss" src="./submitHw.scss"></style>

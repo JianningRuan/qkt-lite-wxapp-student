@@ -1,0 +1,150 @@
+<config>
+  {
+    "usingComponents": {
+      "modal": "../../../components/modal/modal.mina",
+      "baseNone": "../../../components/baseNone/baseNone.mina"
+    }
+  }
+</config>
+<template>
+  <view>
+    <view class="tab-tit-wrapper">
+      <image src="../../../assets/images/find/tab-tit.png"></image>
+      <view class="tab-tit">
+        <text class="iconfont icon-question left" catchtap="toggleVisable"></text>
+        <text class="title">口算天才</text>
+      </view>
+      <view class="grade-btn">
+        <image src="../../../assets/images/find/grade-btn.png"></image>
+        <buttton>
+          <picker bindchange="bindPickerChange"  value="{{gradeIndex}}" range="{{gradeList}}" range-key="key">
+            <view class="picker">
+              {{gradeList[gradeIndex].key}}<text class="icon icon-right"></text>
+            </view>
+          </picker>
+        </buttton>
+      </view>
+    </view>
+
+    <view class="main pl-30 pr-30 pt-30">
+      <block wx:if="{{ruleList && ruleList.length>0}}">
+        <view class="chapter-box mb-30" wx:for="{{ruleList}}" wx:key="{{index}}" bind:tap="goChallenge" data-rule="{{item.rule.id}}">
+          <image class="chapter-box-bg" src="../../../assets/images/fastReckon/fast-reckon-bg.jpg"></image>
+          <view class="chapter-box-flex flex flex-pack-justify flex-align-center">
+            <view class="chapter-cont flex flex-v flex-pack-justify">
+              <view class="chapter-tit">{{item.rule.title}}</view>
+              <view class="chapter-detail">最高:{{item.bestScore}}分</view>
+            </view>
+            <block wx:if="{{item.lastScore==0}}">
+              <view class="challenge-btn no-finish-btn">
+                <image src="../../../assets/images/fastReckon/cup-btn-bg.png"></image>
+                <view class="no-finish-text">未参与</view>
+              </view>
+            </block>
+            <block wx:else>
+              <view class="challenge-btn finish-btn">
+                <view class="pt-10">上次</view>
+                <view class="fraction">{{item.lastScore}}</view>
+              </view>
+            </block>
+          </view>
+        </view>
+      </block>
+      <block wx:else>
+        <baseNone >
+          <text slot="tips">暂无习题</text>
+          <text slot="tipsText">暂时无该年级习题，敬请期待</text>
+        </baseNone>
+      </block>
+    </view>
+
+    <modal visable="{{visable}}" bindmodaltoggle="toggleVisable">
+      <text slot="header">口算规则</text>
+      <view slot="body">
+        <view>1.每一次挑战限时2分钟，答对1题得1
+          分，答错则可以继续作答；</view>
+          <view>2.若挑战过程中途退出，不保留答题进
+          度。</view>
+      </view>
+      <view slot="footer" class="btn-group flex">
+        <text class="btn btn-primary btn-lg flex1" catchtap="toggleVisable">知道了</text>
+      </view>
+    </modal>
+  </view>
+</template>
+<script>
+    import { Page } from '@tinajs/tina';
+    import wechat from './../../../until/wechat';
+
+    Page.define({
+        data: {
+          gradeList: wechat.getGradeList(),
+          gradeIndex:0,
+          visable: false,
+          ruleList:[],//规则列表
+        },
+        beforeLoad() {
+
+        },
+        onLoad() {
+
+        },
+        onReady() {
+        },
+        onShow() {
+          //如果有缓存年级则使用缓存年级
+          let calcChallengeGradeIndex=wx.getStorageSync('calcChallengeGradeIndex');
+          if(calcChallengeGradeIndex){
+            this.setData({
+              gradeIndex:parseInt(calcChallengeGradeIndex)
+            })
+          }
+          this.getRuleList();
+        },
+        onHide() {
+        },
+        onUnload() {
+        },
+        compute() {
+        },
+        methods: {
+          bindPickerChange(e){
+            this.setData({
+              gradeIndex:e.detail.value
+            });
+            //缓存所选年级
+            wx.setStorageSync('calcChallengeGradeIndex', e.detail.value);
+            this.getRuleList();
+          },
+          // 去挑战
+          goChallenge(e){
+            let ruleId=e.currentTarget.dataset.rule;
+            // reckonChallenge.mina
+            wx.navigateTo({
+              url: `/pages/fastReckon/reckonChallenge/reckonChallenge?ruleIds=${ruleId}`
+            })
+          },
+          toggleVisable(e){
+            if(e.type && e.type=='modaltoggle'){
+              this.setData({
+                visable:e.detail
+              })
+            }else{
+              this.setData({
+                visable:!this.data.visable
+              })
+            }
+          },
+          //
+          async getRuleList(){
+            let res=await this.$api.calc.geniusRuleList({grade:this.data.gradeList[this.data.gradeIndex].value});
+            if(res.rcode==300){
+              this.setData({
+                ruleList:res.data.ruleList
+              })
+            }
+          }
+        }
+    })
+</script>
+<style lang="scss" src="./fastReckonIndex.scss"></style>

@@ -1,0 +1,48 @@
+@import "./../../../assets/style/base.scss";
+
+.main{
+  // padding-top: 60px;
+  padding-top: 94px;
+
+  &.active{
+    padding-top: 0;
+  }
+}
+
+.up-to-loading {
+  width: 100%;
+  line-height: 50px;
+  text-align: center;
+  font-size: 24px;
+  color: #666;
+}
+
+.screen{
+  position: fixed;
+  width: 100%;
+  // background: #e5e5e5;
+  z-index: 8;
+  left: 0;
+  top: 0;
+  // box-shadow: 0 0 10rpx rgba(0,0,0,0.2);
+  background: #f7f7f7;
+  border-bottom: 1px solid #dbdbdb;
+
+  .screen-item{
+    text-align: center;
+    // line-height: 60px;
+    line-height: 93px;
+    color: #40b3ff;
+    border-right: 1px solid $lineColor;
+    &:last-child {
+      border-right: 0;
+    }
+
+    text{
+      display: inline-block;
+      vertical-align: middle;
+      margin-left: 10px;
+      font-size: 28px;
+    }
+  }
+}

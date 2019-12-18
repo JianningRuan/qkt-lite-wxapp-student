@@ -1,0 +1,164 @@
+@import "../../../assets/style/base";
+
+page {
+  min-height: 100%;
+  background: $bgColor;
+}
+
+.msg-box {
+  .msg-author-box {
+    height: 124px;
+    border-bottom: 1px solid $lineColor;
+    .msg-author {
+
+      .msg-head {
+        @include headPic(64px, 64px);
+      }
+      .msg-author-msg {
+        .msg-name {
+          font-size: 24px;
+        }
+        .msg-data {
+          font-size: 24px;
+          color: #666666;
+        }
+      }
+    }
+
+    .new {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #fa1137;
+    }
+    .no-vote {
+      font-size: 24px;
+      color: #fa1137;
+    }
+  }
+
+  .msg-tit {
+    line-height: 46px;
+    // font-size: 0;
+    word-break: break-word;
+    font-size: 28px;
+    font-weight: bold;
+    vertical-align: middle;
+    .msg-icon {
+      // display: inline-block;
+      vertical-align: middle;
+      @include fullPic(34px, 34px);
+      margin-top: 6px;
+    }
+    .msg-text {
+      font-size: 28px;
+      font-weight: bold;
+      vertical-align: middle;
+      word-wrap: break-word;
+    }
+    .pic-icon {
+      font-size: 24px;
+      color: #666666;
+      display: inline-block;
+      vertical-align: middle;
+    }
+  }
+
+  .msg-cont {
+    background: #e8f3ff;
+    .msg-text {
+      font-size: 28px;
+      line-height: 48px;
+      color: $fontColor;
+      word-wrap: break-word;
+    }
+    .msg-pic-wrapper {
+      .msg-pic {
+        @include fullPic(184px, 184px);
+        border: 2px solid $fontColor;
+        border-radius: 10px;
+        overflow: hidden;
+        background: #94e2ee;
+        margin-left: 13px;
+        margin-right: 13px;
+        background-repeat:no-repeat;
+        background-position:50% 50%;
+        background-size:cover;
+        box-sizing:border-box;
+        image {
+          border-radius: 10px;
+        }
+      }
+    }
+
+    .radio-group {
+      width: 100%;
+      .radio-label {
+        // display: block;
+        color: $fontColor;
+        line-height: 46px;
+        font-size: 0;
+        // word-wrap: break-word;
+        radio {
+          display: none;
+        }
+        .radio {
+          width: 24px;
+          height: 24px;
+          border-radius: 50%;
+          border: 1px solid $fontColor;
+          display: block;
+          vertical-align: middle;
+          margin-top: 6px;
+          &.active {
+            background: $fontColor;
+            box-shadow: 0 0 0 3px #fff inset;
+          }
+        }
+        .radio-text {
+          // display: inline-block;
+          vertical-align: middle;
+          font-size: 28px;
+          // word-wrap: break-word;
+          .radio-text-cont {
+            word-break: break-word;
+          }
+        }
+      }
+    }
+
+    .submit-vote {
+      width: 104px;
+      height: 42px;
+      background: url("../../../assets/images/home/task-btn.png") 0 0 no-repeat;
+      background-size: 104px 88px;
+      text-align: center;
+      line-height: 42px;
+      color: #ffffff;
+      font-size: 24px;
+      &:active {
+        background: url("../../../assets/images/home/task-btn.png") center bottom no-repeat;
+        background-size: 104px 88px;
+      }
+    }
+  }
+}
+
+.float-nav {
+  width: 180px;
+  height: 64px;
+  background: #e9f3ff;
+  position: fixed;
+  top: 25px;
+  left: 0;
+  z-index: 20;
+  text-align: center;
+  line-height: 64px;
+  color: #fa1137;
+  border-radius: 0 32px 32px 0;
+  .spread-icon {
+    font-size: 24px;
+    color: #fa1137;
+    display: inline-block;
+  }
+}

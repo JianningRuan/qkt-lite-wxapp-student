@@ -1,0 +1,186 @@
+<config>
+  {
+  "component": true
+  }
+</config>
+<template>
+  <view scroll-y scroll-x class="container" wx:if="{{showSrc}}">
+    <view class="" bindtouchmove="touchMoveCallback" bindtouchstart="touchStartCallback">
+      <image src="{{imgSrc}}" style="width: {{ touch.scaleWidth }}px; height: {{ touch.scaleHeight }}px; top: {{touch.top}}px; left: {{touch.left}}px;" bindload="bindLoad"></image>
+    </view>
+    <view class="close-btn icon icon-close" bind:tap="closePreviewImage"></view>
+  </view>
+</template>
+<script>
+  import { Component } from '@tinajs/tina';
+
+  Component.define({
+    options: {
+      addGlobalClass: true,
+    },
+    properties: {
+      imgSrc: {
+        type: String,
+        value: '',
+        observer: function(newVal, oldVal, changedPath) {
+          if (newVal !== oldVal){
+            let touch = {
+              distance: 0,
+              scale: 1,
+              baseWidth: null,
+              baseHeight: null,
+              scaleWidth: null,
+              scaleHeight: null,
+              top: 0,
+              left: 0,
+              moveX: 0,
+              moveY: 0
+            };
+            this.setData({
+              touch: touch
+            })
+          }
+        }
+      },
+      showSrc: {
+        type: Boolean,
+        value: false,
+        observer: function(newVal, oldVal, changedPath) {}
+      }
+    },
+    data: {
+      winWidth: wx.getSystemInfoSync().windowWidth,
+      winHeight: wx.getSystemInfoSync().windowHeight,
+      touch: {
+        distance: 0,
+        scale: 1,
+        baseWidth: null,
+        baseHeight: null,
+        scaleWidth: null,
+        scaleHeight: null,
+        top: 0,
+        left: 0,
+        moveX: 0,
+        moveY: 0
+      },
+      moveStartX: 0,
+      moveStartY: 0
+    },
+    created () {},
+    attached () {},
+    ready () {},
+    moved () {},
+    detached () {},
+    methods: {
+      // 关闭浏览
+      closePreviewImage(){
+        this.triggerEvent('closePreview');
+      },
+      touchStartCallback(e) {
+        // 单手指缩放开始，也不做任何处理
+        if(e.touches.length === 1) {
+          this.setData({
+            moveStartX: e.touches[0].clientX,
+            moveStartY: e.touches[0].clientY
+          });
+        }else {
+          console.log('双手指触发开始');
+          // 注意touchstartCallback 真正代码的开始 // 一开始我并没有这个回调函数，会出现缩小的时候有瞬间被放大过程的bug // 当两根手指放上去的时候，就将distance 初始化。
+          let xMove = e.touches[1].clientX - e.touches[0].clientX;
+          let yMove = e.touches[1].clientY - e.touches[0].clientY;
+          let distance = Math.sqrt(xMove * xMove + yMove * yMove);
+          this.data.touch.distance = distance;
+          this.setData({
+            touch: this.data.touch
+          })
+        }
+
+      },
+      touchMoveCallback(e) {
+        let touch = this.data.touch;
+        // 单手指缩放我们不做任何操作
+        if(e.touches.length === 1){
+          let startX = this.data.moveStartX;
+          let startY = this.data.moveStartY;
+          let endX = e.touches[0].clientX;
+          let endY = e.touches[0].clientY;
+          this.data.touch.moveX = this.data.touch.moveX + (endX - startX);
+          this.data.touch.moveY = this.data.touch.moveY + (endY - startY);
+
+          this.data.touch.top = this.data.touch.top + endY - startY;
+          this.data.touch.left = this.data.touch.left + endX - startX;
+          this.data.moveStartX = endX;
+          this.data.moveStartY = endY;
+          this.setData({
+            touch: this.data.touch,
+            moveStartX: this.data.moveStartX,
+            moveStartY: this.data.moveStartY
+          });
+        }else {
+          console.log('双手指运动');
+          let xMove = e.touches[1].clientX - e.touches[0].clientX;
+          let yMove = e.touches[1].clientY - e.touches[0].clientY;
+          // 新的 ditance
+          let distance = Math.sqrt(xMove * xMove + yMove * yMove);
+          let distanceDiff = distance - touch.distance;
+          let newScale = touch.scale + 0.005 * distanceDiff;
+          // 为了防止缩放得太大，所以scale需要限制，同理最小值也是
+          if(newScale >= 2) {
+            newScale = 2
+          }
+          if(newScale <= 0.6) {
+            newScale = 0.6
+          }
+          let scaleWidth = newScale * touch.baseWidth;
+          let scaleHeight = newScale * touch.baseHeight;
+          // 赋值 新的 => 旧的
+          this.data.touch.distance = distance;
+          this.data.touch.scale = newScale;
+          this.data.touch.scaleWidth = scaleWidth;
+          this.data.touch.scaleHeight = scaleHeight;
+          this.data.touch.diff = distanceDiff;
+
+          this.data.touch.left = (this.data.winWidth - scaleWidth) / 2 + touch.moveX;
+          this.data.touch.top = (this.data.winHeight - scaleHeight) / 2 +  touch.moveY;
+          this.setData({
+            touch: this.data.touch
+          });
+        }
+      },
+      bindLoad: function(e) {
+        // bindload 这个api是<image>组件的api类似<img>的onload属性
+        // 判断大小
+        let width = 0;
+        let height = 0;
+        if (e.detail.width <= this.data.winWidth && e.detail.height <= this.data.winHeight){ // 图片宽高不超过屏幕宽高
+          width = e.detail.width;
+          height = e.detail.height;
+        } else if (e.detail.width > this.data.winWidth && e.detail.head <= this.data.winHeight){ // 图片宽度溢出，高度不溢出
+          width = this.data.winWidth;
+          height = (this.data.winWidth * e.detail.height) / e.detail.width;
+        } else if (e.detail.height > this.data.winHeight && e.detail.width <= this.data.winWidth){ // 图片高度溢出，宽度不溢出
+          height = this.data.winHeight;
+          width = (e.detail.width * this.data.winHeight) / e.detail.height;
+        } else { // 图片宽高都溢出
+          if (e.detail.width >= e.detail.height){
+            width = this.data.winWidth;
+            height = (this.data.winWidth * e.detail.height) / e.detail.width;
+          } else {
+            height = this.data.winHeight;
+            width = (e.detail.width * this.data.winHeight) / e.detail.height;
+          }
+        }
+        this.data.touch.baseWidth = width;
+        this.data.touch.baseHeight = height;
+        this.data.touch.scaleWidth = width;
+        this.data.touch.scaleHeight = height;
+        this.data.touch.left = (this.data.winWidth - width) / 2;
+        this.data.touch.top = (this.data.winHeight - height) / 2;
+        this.setData({
+          touch: this.data.touch
+        });
+      }
+    },
+  })
+</script>
+<style lang="scss" src="./basePreviewImage.scss"></style>

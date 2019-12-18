@@ -1,0 +1,136 @@
+@import "./../../../assets/style/base.scss";
+
+.video-head {
+  height: 88px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 30;
+
+  .return-btn {
+    width: 88px;
+    height: 88px;
+    text-align: center;
+    line-height: 88px;
+    font-size: 36px;
+    color: #fff;
+    display: block;
+  }
+}
+
+.video {
+  width: 100%;
+  //max-height: 4rem;
+  position: relative;
+
+  video {
+    width: 100%;
+    max-height: 450px;
+  }
+}
+.video-cover {
+  width: 100%;
+
+  image {
+    width: 100%;
+    display: block;
+  }
+}
+
+
+
+
+.video-box {
+  background: #fff;
+  border-bottom: 1px solid $lineColor;
+  position: relative;
+  .video-tit {
+    margin-right: 160px;
+    // height: 1.1rem;
+    // line-height: 1.1rem;
+    color: #222;
+    font-size: 36px;
+    font-weight: 700;
+    line-height: 50px;
+    padding-top: 30px;
+    padding-bottom: 30px;
+  }
+  .more-btn {
+    position: absolute;
+    right: 30px;
+    top: 35px;
+    font-size: 28px;
+    color: #222;
+    height: 40px;
+    line-height: 40px;
+
+    text {
+      display: inline-block;
+      font-size: 24px;
+      transition: all 0.4s ease;
+    }
+  }
+  .video-introduce {
+    font-size: 28px;
+    color: #222;
+    line-height: 50px;
+    max-height: 200px;
+    overflow: hidden;
+    transition: all 0.4s ease;
+  }
+  .video-opa {
+    font-size: 32px;
+    color: #666;
+    .video-opa-item {
+      line-height: 64px;
+      text {
+        font-size: 50px;
+        margin-right: 6px;
+        &.orange-color {
+          color: #fe911d;
+        }
+        &.yellow-color {
+          color: #FFA019;
+        }
+      }
+    }
+  }
+
+  &.active {
+    .more-btn {
+      text {
+        transform: rotate(90deg);
+      }
+    }
+    .video-introduce {
+      max-height: none;
+    }
+  }
+}
+
+.v-box {
+  border-bottom: 1px solid $lineColor;
+
+  .v-box-tit {
+    font-size: 28px;
+    color: #222;
+    line-height: 50px;
+    font-weight: bold;
+  }
+  .v-box-cont {}
+  .get-all {
+    display: block;
+    height: 80px;
+    line-height: 80px;
+    text-align: center;
+    font-size: 28px;
+    color: #40b3ff;
+
+    &:active {
+      background: #f7f7f7;
+    }
+  }
+}
+
+

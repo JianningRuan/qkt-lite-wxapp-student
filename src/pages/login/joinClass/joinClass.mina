@@ -1,0 +1,385 @@
+<config>
+  {
+  "component": true,
+  "navigationBarTitleText":"加入班级",
+  "usingComponents": {
+  "modal": "../../../components/modal/modal.mina"
+  }
+  }
+</config>
+<template>
+  <view>
+    <view class="main">
+      <view class="join-top">
+        <image src="../../../assets/images/login/join-class-top.png"></image>
+      </view>
+      <view class="join-box">
+        <view class="tit">请填写/确认班级信息</view>
+        <view class="register-wrapper">
+          <view class="register-form">
+            <picker bindchange="bindPickerChangeArea" bindcolumnchange="bindMultiPickerColumnChange" mode="multiSelector" value="{{areaIndex}}" range="{{areaArray}}" range-key="name">
+              <view class="flex flex-align-center flex-pack-justify register-box mt-20">
+                <view class="input-tit">地区</view>
+                <view class="flex1 flex flex-align-center">
+                  <input disabled type="text" class="flex1 input-box" value="{{provinceName}}{{cityName}}{{townName}}" placeholder="请选择" />
+                  <view class="right-icon icon icon-right ml-20"></view>
+                </view>
+              </view>
+            </picker>
+            <picker bindchange="bindPickerChangeSchool" value="{{schoolIndex}}" range="{{schoolArray}}" range-key="name">
+              <view class="flex flex-align-center flex-pack-justify register-box mt-20">
+                <view class="input-tit">学校</view>
+                <view class="flex1 flex flex-align-center">
+                  <input disabled type="text" class="flex1 input-box" value="{{schoolName}}" placeholder="请选择" />
+                  <view class="right-icon icon icon-right ml-20"></view>
+                </view>
+              </view>
+            </picker>
+            <picker bindchange="bindPickerChange" value="{{gradeIndex}}" range="{{gradeArray}}" range-key="name">
+              <view class="flex flex-align-center flex-pack-justify register-box mt-20">
+                <view class="input-tit">年级</view>
+                <view class="flex1 flex flex-align-center">
+                  <input disabled type="text" class="flex1 input-box" value="{{gradeName}}" placeholder="请选择" />
+                  <view class="right-icon icon icon-right ml-20"></view>
+                </view>
+              </view>
+            </picker>
+            <picker bindchange="bindPickerChangeClass" value="{{classIndex}}" range="{{classArray}}" range-key="name">
+              <view class="flex flex-align-center flex-pack-justify register-box mt-20">
+                <view class="input-tit">班级</view>
+                <view class="flex1 flex flex-align-center">
+                  <input disabled type="text" class="flex1 input-box" value="{{className}}" placeholder="请选择" />
+                  <view class="right-icon icon icon-right ml-20"></view>
+                </view>
+              </view>
+            </picker>
+          </view>
+          <view class="submit-btn" bind:tap="submitData">申请加入班级</view>
+        </view>
+        <view class="join-tips"><text wx:if="{{userInfo.entryApply}}">你已申请加入班级，老师正在审核中</text></view>
+      </view>
+    </view>
+  </view>
+
+  <modal visable="{{visible}}" bindmodaltoggle="toggleVisible">
+    <text slot="header">申请成功</text>
+    <view slot="body">你已经成功申请进入{{gradeName}}{{className}}，班主任将会审核你的信息，请等候消息哦。
+    </view>
+    <view slot="footer" class="btn-group flex">
+      <text class="btn btn-primary btn-lg flex1" catchtap="toggleVisible">知道了</text>
+    </view>
+  </modal>
+</template>
+<script>
+  import {Page} from '@tinajs/tina';
+  import {tinax} from '@/store'
+  Page.define({
+    mixins: [
+      tinax.connect({
+        getters (getters) {
+          return {
+            userInfo: getters.userInfo()
+          };
+        }
+      }),
+    ],
+    data: {
+      gradeArray: [
+        {id: 1, name: '一年级'},
+        {id: 2, name: '二年级'},
+        {id: 3, name: '三年级'},
+        {id: 4, name: '四年级'},
+        {id: 5, name: '五年级'},
+        {id: 6, name: '六年级'},
+        {id: 7, name: '七年级'},
+        {id: 8, name: '八年级'},
+        {id: 9, name: '九年级'},
+      ],
+      gradeIndex: '',
+      grade: '', // id
+      gradeName: '',
+      classArray: [
+        {id: 1, name: '1班'},
+        {id: 2, name: '2班'},
+        {id: 3, name: '3班'},
+        {id: 4, name: '4班'},
+        {id: 5, name: '5班'},
+        {id: 6, name: '6班'},
+        {id: 7, name: '7班'},
+        {id: 8, name: '8班'},
+        {id: 9, name: '9班'},
+        {id: 10, name: '10班'},
+        {id: 11, name: '11班'},
+        {id: 12, name: '12班'},
+        {id: 13, name: '13班'},
+        {id: 14, name: '14班'},
+        {id: 15, name: '15班'},
+        {id: 16, name: '16班'},
+        {id: 17, name: '17班'},
+        {id: 18, name: '18班'},
+        {id: 19, name: '19班'},
+        {id: 20, name: '20班'},
+      ],
+      classIndex: '',
+      classNo: '', // id
+      className: '',
+      areaArray: ['', '', ''],
+      areaIndex: ['', '', ''],
+      provinceId: '',
+      provinceName: '',
+      cityId: '',
+      cityName: '',
+      townId: '',
+      townName: '',
+      schoolArray: [],
+      schoolIndex: '',
+      schoolId: '', // id
+      schoolName: '',
+      visible: false,
+    },
+    beforeLoad() {
+    },
+    onLoad() {
+      if (this.data.userInfo.grade) {
+        for (let i = 0; i < 9; i++) {
+          if (this.data.userInfo.grade === this.data.gradeArray[i].id) {
+            this.setData({
+              gradeIndex: i,
+              grade: this.data.userInfo.grade,
+              gradeName: this.data.gradeArray[i].name,
+            })
+            break
+          }
+        }
+      }
+      this.getAreaList(0, 0)
+    },
+    onReady() {
+    },
+    onShow() {
+    },
+    onHide() {
+    },
+    onUnload() {
+    },
+    compute() {
+    },
+    methods: {
+      // 获取地区
+      getAreaList(parentId = 0, index) {
+        let params = {
+          parentId
+        };
+        this.$api.user.area(params).then((res)=>{
+          if (res.rcode === 300) {
+            let list = res.data.list;
+            if (index > 0 && list.length > 0) { // 如果需要加入全部
+              list.unshift({name: '全部', id: -1});
+            }
+            this.data.areaArray[index] = list;
+            this.setData({
+              areaArray: this.data.areaArray
+            });
+            if (list.length > 0) {
+              let id = list[0].id;
+
+              if (index < 2) {
+                index++;
+                this.getAreaList(id, index)
+              }
+            } else { // 当为空时，则最后一排的数据也清空
+              if (index < 2) {
+                this.data.areaArray[index + 1] = [];
+                this.setData({
+                  areaArray: this.data.areaArray
+                });
+              }
+            }
+          }
+        })
+      },
+      async bindMultiPickerColumnChange(e) {
+        console.log('修改的列为', e.detail.column, '，值为', e.detail.value);
+        let column = e.detail.column;
+        let value = e.detail.value;
+        let data = {
+          areaArray: this.data.areaArray,
+          areaIndex: this.data.areaIndex
+        };
+        data.areaIndex[e.detail.column] = e.detail.value;
+        switch (e.detail.column) {
+          case 0:
+            let res = await this.getPinkArea(data.areaArray[column][value].id);
+            if (res.length > 0) { // 如果需要加入全部
+              res.unshift({name: '全部', id: -1});
+            }
+            data.areaArray[1] = res;
+
+            if (res.length === 0) {
+              data.areaArray[2] = [];
+            } else {
+              let result = await this.getPinkArea(res[0].id);
+              if (result.length > 0) { // 如果需要加入全部
+                result.unshift({name: '全部', id: -1});
+              }
+              data.areaArray[2] = result;
+            }
+            data.areaIndex[1] = 0;
+            data.areaIndex[2] = 0;
+            break
+          case 1:
+            let resTown = await this.getPinkArea(data.areaArray[column][value].id);
+            if (resTown.length > 0) { // 如果需要加入全部
+              resTown.unshift({name: '全部', id: -1});
+            }
+            data.areaArray[2] = resTown;
+            data.areaIndex[2] = 0;
+        }
+        this.setData(data);
+      },
+      async getPinkArea(parentId) {
+        let params = {
+          parentId
+        };
+        return new Promise((resolve, reject) => {
+          this.$api.user.area(params).then((res)=>{
+            if (res.rcode === 300) {
+              resolve(res.data.list)
+            } else {
+              resolve([])
+            }
+          }).catch((err)=>{
+            reject([])
+          });
+        })
+      },
+      bindPickerChangeSchool(e) {
+        let index = e.detail.value;
+        this.setData({
+          schoolIndex: index,
+          schoolName: this.data.schoolArray[index].name,
+          schoolId: this.data.schoolArray[index].id
+        })
+      },
+      bindPickerChange(e) {
+        let index = e.detail.value;
+        this.setData({
+          gradeIndex: index,
+          gradeName: this.data.gradeArray[index].name,
+          grade: this.data.gradeArray[index].id
+        })
+      },
+      bindPickerChangeClass(e) {
+        let index = e.detail.value;
+        this.setData({
+          classIndex: index,
+          className: this.data.classArray[index].name,
+          classNo: this.data.classArray[index].id
+        })
+      },
+      // 地区选择完确定
+      bindPickerChangeArea(e) {
+        let value = e.detail.value;
+        this.setData({
+          areaIndex: value
+        });
+        let getSchool = true;
+        for (let i = 2; i > -1; i--) {
+          if (this.data.areaArray[i].length > 0) {
+            let index = value[i];
+            let id = this.data.areaArray[i][index].id;
+            let name = this.data.areaArray[i][index].name;
+            if (i === 2) {
+              this.setData({
+                townId: id !== -1 ? id : '',
+                townName: id !== -1 ? name : ''
+              })
+            } else if (i === 1) {
+              this.setData({
+                cityId: id !== -1 ? id : '',
+                cityName: id !== -1 ? name : ''
+              })
+            } else {
+              this.setData({
+                provinceId: id !== -1 ? id : '',
+                provinceName: id !== -1 ? name : ''
+              })
+            }
+            if (getSchool && id !== -1) {
+              this.getSchoolList(id);
+              getSchool = false
+            }
+
+          } else {
+            if (i === 2) {
+              this.setData({
+                townId: '',
+                townName: ''
+              })
+            } else if (i === 1) {
+              this.setData({
+                cityId: '',
+                cityName: ''
+              })
+            } else {
+              this.setData({
+                provinceId: '',
+                provinceName: ''
+              })
+            }
+          }
+        }
+      },
+      // 获取学校
+      getSchoolList(areaId) {
+        let params = {
+          areaId
+        };
+        this.$api.user.school(params).then((res)=>{
+          if (res.rcode === 300) {
+            this.setData({
+              schoolArray: res.data.list,
+              schoolIndex: 0,
+              schoolName: ''
+            })
+          }
+        })
+      },
+      submitData () {
+        if (this.data.gradeIndex === '') {
+          this.$toast('请选择年级');
+          return false
+        }
+        if (this.data.classIndex === '') {
+          this.$toast('请选择班级');
+          return false
+        }
+        if (this.data.schoolIndex === '') {
+          this.$toast('请选择学校');
+          return false
+        }
+        const params ={
+          classNo: this.data.classNo,
+          grade: this.data.grade,
+          schoolId: this.data.schoolId
+        }
+        this.$api.home.entryByInfo(params).then(res => {
+          if (res.rcode === 300) {
+            this.setData({
+              visible: true
+            })
+          } else {
+            this.$toast(res.message)
+          }
+        })
+      },
+      toggleVisible() {
+        this.setData({
+          visible: true
+        })
+        this.$router.back()
+      },
+    }
+  })
+</script>
+<style lang="scss" src="./joinClass.scss"></style>

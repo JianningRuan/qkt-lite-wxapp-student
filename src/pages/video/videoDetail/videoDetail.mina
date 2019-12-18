@@ -1,0 +1,231 @@
+<config>
+  {
+    "usingComponents": {
+      "baseVideoList": "../../../components/baseVideoList/baseVideoList.mina"
+    }
+  }
+</config>
+<template>
+  <view>
+    <view class="video" wx:if="{{video.videoModel}}">
+      <video
+        src="{{video.videoModel.videoUrl}}"
+        width="100%"
+        bindplay="goPlay"
+        bindtimeupdate="timeUpdate"
+        bindended="ended"
+        bindpause="pause"
+      >
+      </video><!--https://mpv.videocc.net/77b47ecb94/b/77b47ecb9493113b1cb4e435e2e4783b_1.mp4  video.videoModel.videoUrl-->
+    </view>
+
+    <view class="tab-cont-wrapper">
+      <!--tab1-->
+      <view class="tab-cont">
+        <!--简介-->
+        <view class="video-box pl-30 pr-30 {{showIntroduce? 'active': ''}}"><!--active-->
+          <view class="video-tit ellipsis">{{video.videoModel.videoName}}</view>
+          <view class="more-btn" bind:tap="showMoreIntroduce">学习提纲<text class="icon icon-right"></text></view>
+          <view class="video-introduce">{{video.videoModel.videoDescr?video.videoModel.videoDescr:''}}</view>
+          <view class="video-opa flex flex-pack-end mt-30 mb-30">
+            <!--<view class="video-opa-item" catchtap="videoLike">-->
+              <!--<text class="icon  {{video.videoUserModel.userIsLike==0?'icon-like':'icon-like-filled orange-color'}}"></text>&lt;!&ndash;icon-like-filled orange-color&ndash;&gt;-->
+              <!--{{video.videoModel.likeCount}}-->
+            <!--</view>-->
+            <view class="video-opa-item ml-40" catchtap="videoCollect">
+              <text class="icon {{video.videoUserModel.userIsCollect== 0 ? 'icon-star-line':'icon-star-filled orange-color'}}"></text>
+              {{video.videoModel.collectCount}}
+            </view>
+            <!--<view class="video-opa-item ml-40"><text class="icon icon-share"></text></view>-->
+          </view>
+        </view>
+        <!--简介-end-->
+        <!--相关视频-->
+        <view class="v-box">
+          <view class="v-box-tit pt-30 pl-30 pr-30">相关视频</view>
+          <view class="v-box-cont">
+            <baseVideoList list="{{relationList}}" />
+            <view class="get-all" catchtap="toVideoList">全部</view>
+          </view>
+        </view>
+        <!--相关视频-end-->
+      </view>
+      <!--tab1-end-->
+    </view>
+  </view>
+</template>
+<script>
+    import { Page } from '@tinajs/tina';
+
+    Page.define({
+        data: {
+          video:{},
+          relationList:[],
+          showIntroduce: false,
+          src:'http://wxsnsdy.tc.qq.com/105/20210/snsdyvideodownload?filekey=30280201010421301f0201690402534804102ca905ce620b1241b726bc41dcff44e00204012882540400&bizid=1023&hy=SH&fileparam=302c020101042530230204136ffd93020457e3c4ff02024ef202031e8d7f02030f42400204045a320a0201000400',
+          hasPlay: false, // 是否点击过播放
+          cont: 0, // 计时秒
+          timingMethod: '', // 计时方法
+          currentPosition: 0,
+          videoTime: 0
+        },
+        beforeLoad() {
+        },
+        onLoad() {
+          if(this.$route.query.videoId){
+            this.getVideo(this.$route.query.videoId);
+            this.getRelationList(this.$route.query.videoId);
+          }
+        },
+        onReady() {
+        },
+        onShow() {
+        },
+        onHide() {
+        },
+        onUnload() {
+          this.clearIntervalCont();
+          this.setVideoPoint();
+        },
+        compute() {
+        },
+        methods: {
+          showMoreIntroduce(){
+            let showIntroduce = this.data.showIntroduce;
+            this.setData({
+              showIntroduce: !showIntroduce
+            })
+          },
+          async getVideo(id){
+            let res=await this.$api.course.getVideoDetail({
+              videoId:id
+            });
+            if(res.rcode===300){
+              let video = res.data;
+              this.setData({
+                video:video
+              });
+              wx.setNavigationBarTitle({
+                title: video.videoModel.videoName
+              });
+
+              if (video.videoModel.justForVip && video.videoModel.videoUrl === null){
+                wx.showModal({
+                  title: '提示',
+                  content: 'VIP用户才能观看此视频',
+                  showCancel: false,
+                  success (res) {}
+                });
+              }
+            }
+          },
+          async getRelationList(id){
+            let res=await this.$api.course.getRelationList({videoId:id});
+            if(res.rcode===300){
+              this.setData({
+                relationList:res.data.lessonList
+              })
+            }
+          },
+          toVideoList(){
+            this.$router.navigate(`/pages/video/videoList/videoList?courseId=${this.data.video.courseId}`)
+          },
+          async videoLike(){
+            if(this.data.video.videoUserModel.userIsLike!==1){
+              let res=await this.$api.course.videoLike({
+                resourceId:this.data.video.currentId,
+                type:2
+              });
+              if(res.rcode===300){
+                this.$message.success("点赞成功");
+                this.data.video.videoUserModel.userIsLike=1;
+                this.setData({
+                  video:this.data.video
+                })
+              }
+            }
+          },
+          async videoCollect(){
+            let video = this.data.video;
+            let res = await this.$api.course.videoCollect({
+              resourceId: video.videoUserModel.videoId,
+              type:1
+            });
+            if (res.rcode === 300){
+              if (video.videoUserModel.userIsCollect === 0){
+                this.$message.success("收藏成功");
+                video.videoUserModel.userIsCollect = 1;
+                video.videoModel.collectCount++;
+              } else {
+                this.$message.success("取消收藏");
+                video.videoUserModel.userIsCollect = 0;
+                video.videoModel.collectCount--;
+              }
+              this.setData({
+                video: video
+              })
+            }
+          },
+          goPlay(){
+            let video = this.data.video;
+            if (video.videoModel.justForVip && video.videoModel.videoUrl === null){
+              wx.showModal({
+                title: '提示',
+                content: 'VIP用户才能观看此视频',
+                showCancel: false,
+                success (res) {}
+              });
+              return
+            }
+
+            this.setData({
+              hasPlay: true
+            });
+            this.data.timingMethod = setInterval(()=>{
+              let cont = this.data.cont;
+              cont = cont + 1;
+              this.setData({
+                cont: cont
+              });
+              if (this.data.cont % 30 === 0){
+                this.setVideoPoint();
+              }
+            }, 1000)
+          },
+          pause(){
+            this.clearIntervalCont();
+          },
+          ended(){
+            this.setVideoPoint();
+            this.clearIntervalCont();
+          },
+          setVideoPoint(){
+            // 没有播放过或者已发送过一次，就不再发送
+            if (!this.data.hasPlay){
+              return
+            }
+            let videoParams = {
+              position: this.data.currentPosition,
+              readTime: this.data.cont, //  * 1000
+              videoId: this.data.video.videoModel.videoId,
+              videoTime: this.data.videoTime,
+              currentId: this.data.video.currentId
+            };
+            this.$api.course.updateVideoBrowse(videoParams).then((res)=>{
+            });
+          },
+          clearIntervalCont(){
+            clearInterval(this.data.timingMethod);
+          },
+          timeUpdate(event){
+            let currentPosition = parseInt(event.detail.currentTime);
+            let videoTime = parseInt(event.detail.duration);
+            this.setData({
+              currentPosition: currentPosition,
+              videoTime: videoTime
+            })
+          }
+        }
+    })
+</script>
+<style lang="scss" src="./videoDetail.scss"></style>

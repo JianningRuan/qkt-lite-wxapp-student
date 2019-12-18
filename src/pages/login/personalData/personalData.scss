@@ -1,0 +1,95 @@
+@import "../../../assets/style/base";
+
+.register-banner {
+  position: relative;
+  .banner {
+    width: 100%;
+    height: 332px;
+  }
+  .register-banner-views {
+    position: absolute;
+    top: 56px;
+    left: 80px;
+    bottom: 80px;
+    right: 0;
+    .title {
+      font-size: 42px;
+      color: #fff;
+      line-height: 80px;
+    }
+    .cont {
+      width: 336px;
+      font-size: 28px;
+      color: #fff;
+      line-height: 42px;
+      text {
+        color: #fcff00;
+      }
+    }
+  }
+  .register-banner-footer {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 34px;
+    background: #fff;
+    border-radius: 34px 34px 0 0;
+  }
+}
+
+.register-wrapper {
+  padding-left: 80px;
+  padding-right: 80px;
+}
+.register-form {
+  margin-bottom: 80px;
+  overflow: hidden;
+}
+.register-box {
+  border-bottom: 1px solid #e5e5e5;
+  padding-top: 20px;
+  padding-bottom: 20px;
+  .input-tit {
+    font-size: 32px;
+    color: #666;
+  }
+  .input-box {
+    text-align: right;
+    height: 50px;
+    line-height: 50px;
+    color: #333;
+    font-size: 32px;
+    &::-webkit-input-placeholder{
+      color:#999;
+    }
+  }
+  .picker-cont {
+    height: 50px;
+    line-height: 50px;
+    color: #333;
+    font-size: 32px;
+  }
+  .right-icon {
+    font-size: 28px;
+    color: #999;
+    height: 50px;
+    line-height: 50px;
+  }
+}
+
+.submit-btn {
+  width: 100%;
+  height: 88px;
+  line-height: 88px;
+  text-align: center;
+  color: #fff;
+  font-size: 34px;
+  background: #8bd1e7;
+  border-radius: 44px;
+  display: block;
+  box-shadow: 0 0 8px 4px rgba(102, 102, 102, 0.15);
+  &:active {
+    background: #62bdda;
+  }
+}

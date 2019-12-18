@@ -1,0 +1,89 @@
+<template>
+  <view class="full-page main-bg">
+    <view class="main pl-30 pr-30 pt-30">
+      <view class="box setting-box pl-30 pr-30 mb-30">
+        <view class="setting-item flex flex-align-center pt-20 pb-20">
+          <view class="head-pic mr-20">
+            <image src="{{userInfo.pic}}" wx:if="{{userInfo.pic !== null && userInfo.pic !== undefined}}"></image>
+            <image src="../../../assets/images/common/student-head.png" wx:else></image>
+          </view>
+          <view class="user-name">{{userInfo.name}}</view>
+        </view>
+        <!--<view class="setting-item flex flex-pack-justify flex-align-center pt-20 pb-20" catchtap="changeRole">
+          <view class="setting-name">切换教师角色</view>
+          <view class="icon icon-right"></view>
+        </view>-->
+        <view class="setting-item flex flex-pack-justify flex-align-center pt-20 pb-20">
+          <view class="setting-name">手机号</view>
+          <view>{{userInfo.mobile}}</view>
+        </view>
+        <!--<view class="setting-item flex flex-pack-justify flex-align-center pt-20 pb-20">
+          <view class="setting-name">资料设置</view>
+          <view class="icon icon-right"></view>
+          <button bind:tap="goSetting">进入用户资料设置</button>
+        </view>-->
+        <view class="setting-item flex flex-pack-justify flex-align-center pt-20 pb-20">
+          <view class="setting-name">在线客服</view>
+          <view class="icon icon-right"></view>
+          <button open-type="contact">进入客服会话</button>
+        </view>
+      </view>
+
+      <!--<view class="box logout mb-30">
+        <view class="logout-btn">退出登录</view>
+      </view>-->
+    </view>
+  </view>
+</template>
+<script>
+  import { Page } from '@tinajs/tina';
+
+
+  Page.define({
+    data: {
+      userInfo:{}
+    },
+    beforeLoad() {
+    },
+    onLoad() {
+      this.getUserInfo();
+    },
+    onReady() {
+      wx.setNavigationBarTitle({
+        title: '设置'
+      });
+    },
+    onShow() {
+    },
+    onHide() {
+    },
+    onUnload() {
+    },
+    compute() {
+    },
+    methods: {
+      async getUserInfo(){
+        let res=await this.$api.user.getSetting();
+        if(res.rcode===300){
+          this.setData({
+            userInfo:res.data
+          })
+        }
+      },
+      changeRole(){
+        wx.navigateToMiniProgram({
+          appId: 'wx0c80294f9c8c5bea',
+          envVersion: 'release',
+          success(res) {
+            // 打开成功
+          }
+        })
+      },
+      // 去设置资料
+      goSetting() {
+        this.$router.navigate('/pages/login/personalData/personalData?opType=edit')
+      }
+    }
+  })
+</script>
+<style lang="scss" src="./setting.scss"></style>

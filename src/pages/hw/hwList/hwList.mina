@@ -1,0 +1,305 @@
+<config>
+  {
+    "usingComponents": {
+      "baseNone": "../../../components/baseNone/baseNone.mina",
+      "pagation": "../../../components/pagation/pagation.mina",
+      "scroller-top": "../../../components/scroller-top/scroller-top.mina"
+    }
+  }
+</config>
+<template>
+  <view>
+      <view class="hw-list-wrapper mb-30 pl-25 pr-25 pt-35">
+
+        <view class="month-btn">
+          <image src="../../../assets/images/find/grade-btn.png"></image>
+          <picker mode="date" value="{{date}}" fields="month" bindchange="bindDateChange">
+            <view class="month-btn-text">{{month}}月<text class="icon icon-right ml-10"></text></view>
+          </picker>
+        </view>
+
+        <view class="mb-30" wx:for="{{homeWorkList}}" wx:for-item="homework" wx:for-index="hwIndex" wx:key="{{homework.submitDate}}" id="{{'hw' + hwIndex}}">
+
+          <view class="hw-tit">
+            <image src="../../../assets/images/common/tit-bg.png"></image>
+            <view class="hw-tit-cont">{{homework.cTime}}</view>
+          </view>
+
+          <view class="box hw-box pl-30 pr-30" wx:for="{{homework.data}}" wx:for-item="homeworkItem" wx:key="{{homeworkItem.recordId}}" bind:tap="goDetail" data-hw="{{homeworkItem}}">
+            <view class="flex flex-pack-justify flex-align-center">
+              <view class="box-tit flex flex-align-center mt-30 mb-30">
+                <view class="task-icon mr-20">
+                  <image src="../../../assets/images/home/cn-icon.png" wx:if="{{homeworkItem.subject === 1}}"></image>
+                  <image src="../../../assets/images/home/math-icon.png" wx:elif="{{homeworkItem.subject === 2}}"></image>
+                  <image src="../../../assets/images/home/en-icon.png" wx:else></image>
+                </view>
+                <view class="task-tit-text">{{homeworkItem.title}}</view>
+              </view>
+              <view class="task-state {{homeworkItem.status === 2 ? 'evaluate': ''}}">
+                <text wx:if="{{homeworkItem.status === 1}}">已完成</text>
+                <text wx:elif="{{homeworkItem.status === 2}}">已评价</text>
+              </view>
+            </view>
+          </view>
+
+        </view>
+        <view class="box pl-30 pr-30 mt-50" wx:if="{{homeWorkList.length === 0}}">
+          <baseNone noneType="homework">
+            <view slot="tips">暂无作业记录</view>
+            <view slot="tipsText">本月老师没有布置过作业哦，请查看其他月份</view>
+          </baseNone>
+        </view>
+
+      </view>
+
+    <pagation params="{{params}}" bg="blue" wx:if="{{!parmas.nothing && offSet !== 1}}"></pagation>
+    <scroller-top scrollTop="{{scrollTop}}"></scroller-top>
+
+  </view>
+</template>
+<script>
+    import { Page } from '@tinajs/tina';
+    import dayjs from 'dayjs';
+    import { tinax } from "../../../store";
+
+    Page.define({
+      mixins: [
+        tinax.connect({
+          getters(getters){
+            return {
+              hwIndex: getters.hwIndex(),
+            }
+          },
+          actions(actions){
+            return {
+              setHwIndex: actions.setHwIndex,
+            }
+          }
+        }),
+      ],
+        data: {
+          oriHomeworkList: [],
+          homeWorkList: [],
+          offSet: 0,
+          offSize: 10,
+          totalPages: 1,
+          date: '',
+          month: '',
+          params: {}
+        },
+        beforeLoad() {
+        },
+        onLoad() {
+          let newDate = dayjs(new Date());
+          this.setDataChange(newDate);
+          this.getMyAllHomeworkList(true);
+        },
+        onReady() {
+          wx.setNavigationBarTitle({
+            title: '往期作业'
+          });
+        },
+        onShow() {
+          let index = this.data.hwIndex;
+          let page = parseInt(index/10);
+          if (this.data.hwIndex !== ''){
+            // 延迟500ms再更新，以免数据库还没更新完
+            setTimeout(()=>{
+              this.changeList(page);
+            }, 500)
+          }
+        },
+        onHide() {
+        },
+        onUnload() {
+        },
+        compute() {
+        },
+        onPageScroll({scrollTop}) {
+          this.setData({
+            'scrollTop': scrollTop
+          })
+        },
+        onReachBottom() {
+          this.getMyAllHomeworkList();
+        },
+        methods: {
+          // 更改需要更新的数据
+          async changeList(page){
+            let timeParam = new Date(this.data.date).getTime();
+            let params = {
+              offSet: page,
+              offSize: this.data.offSize,
+              timeParam: timeParam
+            };
+            let res = await this.$api.hw.getMyAllHomeworkList(params);
+            if (res.rcode === 300){
+              res.data.homeworkList.forEach((value, index)=>{
+                this.data.oriHomeworkList.splice(page * 10 + index, 1, value);
+              });
+              let oriHomeworkList = this.data.oriHomeworkList;
+              // 标记index
+              oriHomeworkList.forEach((value, index)=>{
+                value.index = index;
+              });
+              this.setData({
+                oriHomeworkList: oriHomeworkList
+              });
+              let homeworkList = [];
+              let map = {};
+              for(let i = 0; i < oriHomeworkList.length; i++){
+                let item = oriHomeworkList[i];
+                if(!map[item.submitDate]){
+                  homeworkList.push({
+                    submitDate: item.submitDate,
+                    data: [item]
+                  });
+                  map[item.submitDate] = item;
+                }else{
+                  for(let j = 0; j < homeworkList.length; j++){
+                    let dj = homeworkList[j];
+                    if(dj.submitDate === item.submitDate){
+                      dj.data.push(item);
+                      break;
+                    }
+                  }
+                }
+              }
+              homeworkList.forEach((value)=>{
+                value.cTime = dayjs(value.submitDate).format('MM月DD日');
+              });
+              this.setData({
+                homeWorkList: homeworkList
+              });
+            }
+            this.setHwIndex('');
+          },
+          async getMyAllHomeworkList(cover){
+            if (this.data.offSet > this.data.totalPages - 1){
+              /*this.setData({
+                'params.nothing': true
+              });*/
+              return
+            }
+            this.data.params.loading = true;
+            this.setData({
+              params: this.data.params
+            });
+            let timeParam = '';
+            if (this.data.date !== ''){
+              timeParam = new Date(this.data.date).getTime();
+            }
+            let params = {
+              offSet: this.data.offSet,
+              offSize: this.data.offSize,
+              timeParam: timeParam
+            };
+            let res = await this.$api.hw.getMyAllHomeworkList(params);
+            if (res.rcode === 300){
+              let oriHomeworkList = [];
+              if (cover){
+                oriHomeworkList = res.data.homeworkList;
+              } else {
+                oriHomeworkList = this.data.oriHomeworkList.concat(res.data.homeworkList);
+              }
+              // 标记index
+              oriHomeworkList.forEach((value, index)=>{
+                value.index = index;
+              });
+              this.setData({
+                oriHomeworkList: oriHomeworkList
+              });
+
+              let homeworkList = [];
+              let map = {};
+              for(let i = 0; i < oriHomeworkList.length; i++){
+                let item = oriHomeworkList[i];
+                if(!map[item.submitDate]){
+                  homeworkList.push({
+                    submitDate: item.submitDate,
+                    data: [item]
+                  });
+                  map[item.submitDate] = item;
+                }else{
+                  for(let j = 0; j < homeworkList.length; j++){
+                    let dj = homeworkList[j];
+                    if(dj.submitDate === item.submitDate){
+                      dj.data.push(item);
+                      break;
+                    }
+                  }
+                }
+              }
+              homeworkList.forEach((value)=>{
+                value.cTime = dayjs(value.submitDate).format('MM月DD日');
+              });
+              let offSet = this.data.offSet;
+              offSet++;
+
+              this.setData({
+                homeWorkList: homeworkList,
+                offSet: offSet,
+                totalPages: res.data.totalPages
+              });
+
+              if (this.data.offSet > this.data.totalPages - 1){
+                this.data.params.nothing = true;
+                this.setData({
+                  params: this.data.params
+                });
+              }
+              this.data.params.loading = false;
+              this.setData({
+                params: this.data.params
+              });
+            }
+
+          },
+          // 选择年月份
+          bindDateChange(event){
+            this.data.params.nothing = false;
+            this.setData({
+              params: this.data.params
+            });
+            let newTime = event.detail.value;
+            let newDate = dayjs(newTime);
+            this.setDataChange(newDate);
+
+            // 重置列表
+            this.setData({
+              oriHomeworkList: [],
+              homeWorkList: [],
+              offSet: 0,
+              totalPages: 1
+            });
+            // 重新获取
+            setTimeout(()=>{
+              this.getMyAllHomeworkList();
+            }, 500)
+          },
+          setDataChange(newDate){
+            let date = newDate.format('YYYY-MM');
+            let month = newDate.month() + 1;
+            this.setData({
+              date: date,
+              month: month
+            });
+          },
+          // 进入作业详情
+          goDetail(event){
+            let hw = event.currentTarget.dataset.hw;
+            this.setHwIndex(hw.index);
+            if (hw.status === 0) { // 未完成
+              wx.navigateTo({
+                url: `/pages/hw/submitHw/submitHw?id=${hw.recordId}`
+              })
+            }else { // 已完成 - 已评价
+              wx.navigateTo({
+                url: `/pages/hw/hwReport/hwReport?id=${hw.recordId}`
+              })
+            }
+          }
+        }
+    })
+</script>
+<style lang="scss" src="./hwList.scss"></style>

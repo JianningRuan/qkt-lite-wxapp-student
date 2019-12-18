@@ -1,0 +1,524 @@
+<template>
+  <view>
+    <view class="register-banner">
+      <image class="banner" src="../../../assets/images/login/data-bg.jpg"></image>
+      <view class="register-banner-views">
+        <view class="title">完善资料</view>
+        <view class="cont">为了更好地<text>推荐相关学习资料和课程</text>给您，请填写您的基本资料。</view>
+      </view>
+      <view class="register-banner-footer"></view>
+    </view>
+    <view class="register-wrapper">
+      <view class="register-form">
+        <view class="flex flex-align-center flex-pack-justify register-box mt-20">
+          <view class="input-tit">姓名</view>
+          <input type="text" class="flex1 input-box" value="{{stuName}}" bindinput="bindKeyInput" placeholder="请输入学生姓名" />
+        </view>
+        <picker bindchange="bindPickerChange" value="{{gradeIndex}}" range="{{gradeArray}}" range-key="name">
+          <view class="flex flex-align-center flex-pack-justify register-box mt-20">
+            <view class="input-tit">年级</view>
+            <view class="flex1 flex flex-align-center">
+              <input disabled type="text" class="flex1 input-box" value="{{gradeName}}" placeholder="请选择" />
+              <view class="right-icon icon icon-right ml-20"></view>
+            </view>
+          </view>
+        </picker>
+        <picker bindchange="bindPickerChangeClass" value="{{classIndex}}" range="{{classArray}}" range-key="name">
+          <view class="flex flex-align-center flex-pack-justify register-box mt-20">
+            <view class="input-tit">班级</view>
+            <view class="flex1 flex flex-align-center">
+              <input disabled type="text" class="flex1 input-box" value="{{className}}" placeholder="请选择" />
+              <view class="right-icon icon icon-right ml-20"></view>
+            </view>
+          </view>
+        </picker>
+        <picker bindchange="bindPickerChangeArea" bindcolumnchange="bindMultiPickerColumnChange" mode="multiSelector" value="{{areaIndex}}" range="{{areaArray}}" range-key="name">
+          <view class="flex flex-align-center flex-pack-justify register-box mt-20">
+            <view class="input-tit">地区</view>
+            <view class="flex1 flex flex-align-center">
+              <input disabled type="text" class="flex1 input-box" value="{{provinceName}}{{cityName}}{{townName}}" placeholder="请选择" />
+              <view class="right-icon icon icon-right ml-20"></view>
+            </view>
+          </view>
+        </picker>
+        <picker bindchange="bindPickerChangeSchool" value="{{schoolIndex}}" range="{{schoolArray}}" range-key="name">
+          <view class="flex flex-align-center flex-pack-justify register-box mt-20">
+            <view class="input-tit">学校</view>
+            <view class="flex1 flex flex-align-center">
+              <input disabled type="text" class="flex1 input-box" value="{{schoolName}}" placeholder="请选择" />
+              <view class="right-icon icon icon-right ml-20"></view>
+            </view>
+          </view>
+        </picker>
+      </view>
+      <view class="submit-btn" bind:tap="submitData">提交</view>
+    </view>
+  </view>
+</template>
+<script>
+    import { Page } from '@tinajs/tina';
+    import wechat from '@/until/wechat'
+
+    Page.define({
+        data: {
+          opType: 'edit',
+          stuName: '',
+          gradeArray: [
+            {id: 1, name: '一年级'},
+            {id: 2, name: '二年级'},
+            {id: 3, name: '三年级'},
+            {id: 4, name: '四年级'},
+            {id: 5, name: '五年级'},
+            {id: 6, name: '六年级'},
+            {id: 7, name: '七年级'},
+            {id: 8, name: '八年级'},
+            {id: 9, name: '九年级'},
+          ],
+          gradeIndex: '',
+          grade: '', // id
+          gradeName: '',
+          classArray: [
+            {id: 1, name: '1班'},
+            {id: 2, name: '2班'},
+            {id: 3, name: '3班'},
+            {id: 4, name: '4班'},
+            {id: 5, name: '5班'},
+            {id: 6, name: '6班'},
+            {id: 7, name: '7班'},
+            {id: 8, name: '8班'},
+            {id: 9, name: '9班'},
+            {id: 10, name: '10班'},
+            {id: 11, name: '11班'},
+            {id: 12, name: '12班'},
+            {id: 13, name: '13班'},
+            {id: 14, name: '14班'},
+            {id: 15, name: '15班'},
+            {id: 16, name: '16班'},
+            {id: 17, name: '17班'},
+            {id: 18, name: '18班'},
+            {id: 19, name: '19班'},
+            {id: 20, name: '20班'},
+          ],
+          classIndex: '',
+          classNo: '', // id
+          className: '',
+          areaArray: ['', '', ''],
+          areaIndex: ['', '', ''],
+          provinceId: '',
+          provinceName: '',
+          cityId: '',
+          cityName: '',
+          townId: '',
+          townName: '',
+          schoolArray: [],
+          schoolIndex: '',
+          schoolId: '', // id
+          schoolName: '',
+        },
+        beforeLoad() {
+        },
+        async onLoad() {
+          if (this.$route.query.opType) {
+            this.setData({
+              opType: this.$route.query.opType
+            });
+          }
+          let tit = '';
+          if (this.data.opType === 'edit') {
+            tit = '编辑用户';
+            let res = await this.getArea(0, 0);
+          } else {
+            tit = '新建用户';
+          }
+          wx.setNavigationBarTitle({
+            title: tit
+          });
+
+          if (this.data.opType === 'edit') {
+            this.getSetting();
+          } else {
+            this.getAreaList(0, 0)
+          }
+
+        },
+        onReady() {
+        },
+        onShow() {
+        },
+        onHide() {
+        },
+        onUnload() {
+        },
+        compute() {
+        },
+        methods: {
+          // 获取用户资料
+          async getSetting() {
+            let token = wx.getStorageSync('accessToken');
+            let params = {
+              access_token: token
+            };
+            let res = await this.$api.user.getSetting(params);
+            if (res.rcode === 300) {
+              let data = res.data;
+              if (data.name !== '' && data.name !== undefined) {
+                this.setData({
+                  stuName: data.name
+                })
+              }
+              if (data.grade) {
+                for (let i = 0; i < 9; i++) {
+                  if (data.grade === this.data.gradeArray[i].id) {
+                    this.setData({
+                      gradeIndex: i,
+                      grade: data.grade,
+                      gradeName: this.data.gradeArray[i].name,
+                    })
+                    break
+                  }
+                }
+              }
+              if (data.classNo) {
+                for (let i = 0; i < 20; i++) {
+                  if (data.classNo === this.data.classArray[i].id) {
+                    this.setData({
+                      classIndex: i,
+                      classNo: data.classNo,
+                      className: this.data.classArray[i].name
+                    })
+                    break
+                  }
+                }
+              }
+              let provinceRes = await this.getArea(data.provinceId || this.data.areaArray[0][0].id, 1);
+              if (data.provinceId) {
+                for (let i = 0, l = this.data.areaArray[0].length; i < l; i++) {
+                  if (data.provinceId === this.data.areaArray[0][i].id) {
+                    this.data.areaIndex[0] = i;
+                    this.setData({
+                      areaIndex: this.data.areaIndex,
+                      provinceId: data.provinceId,
+                      provinceName: this.data.areaArray[0][i].name
+                    })
+                    break
+                  }
+                }
+              }
+              let cityRes = await this.getArea(data.cityId || this.data.areaArray[1][0].id, 2)
+              if (data.cityId) {
+                this.getArea(data.cityId, 2);
+                for (let i = 0, l = this.data.areaArray[1].length; i < l; i++) {
+                  if (data.cityId === this.data.areaArray[1][i].id) {
+                    this.data.areaIndex[1] = i;
+                    this.setData({
+                      areaIndex: this.data.areaIndex,
+                      cityId: data.cityId,
+                      cityName: this.data.areaArray[1][i].name
+                    })
+                    break
+                  }
+                }
+              }
+              if (data.townId) {
+                let schoolRes = await this.getSchool(data.townId);
+                for (let i = 0, l = this.data.areaArray[2].length; i < l; i++) {
+                  if (data.townId === this.data.areaArray[2][i].id) {
+                    this.data.areaIndex[2] = i;
+                    this.setData({
+                      areaIndex: this.data.areaIndex,
+                      townId: data.townId,
+                      townName: this.data.areaArray[2][i].name
+                    })
+                    break
+                  }
+                }
+              }
+              if (data.schoolId) {
+                for (let i = 0, l = this.data.schoolArray.length; i < l; i++) {
+                  if (data.schoolId === this.data.schoolArray[i].id) {
+                    this.setData({
+                      schoolIndex: i,
+                      schoolId: data.schoolId,
+                      schoolName: this.data.schoolArray[i].name
+                    })
+                    break
+                  }
+                }
+              }
+            }
+          },
+          // 获取地区
+          async getArea(parentId, index) {
+            return new Promise((resolve)=>{
+              let params = {
+                parentId
+              };
+              this.$api.user.area(params).then((res)=>{
+                if (res.rcode === 300) {
+                  let list = res.data.list;
+                  this.data.areaArray[index] = list;
+                  this.setData({
+                    areaArray: this.data.areaArray
+                  });
+                  resolve(true)
+                }
+              });
+            })
+          },
+          // 获取地区
+          getAreaList(parentId = 0, index) {
+            let params = {
+              parentId
+            };
+            this.$api.user.area(params).then((res)=>{
+              if (res.rcode === 300) {
+                let list = res.data.list;
+                if (index > 0 && list.length > 0) { // 如果需要加入全部
+                  list.unshift({name: '全部', id: -1});
+                }
+                this.data.areaArray[index] = list;
+                this.setData({
+                  areaArray: this.data.areaArray
+                });
+                if (list.length > 0) {
+                  let id = list[0].id;
+
+                  if (index < 2) {
+                    index++;
+                    this.getAreaList(id, index)
+                  }
+                } else { // 当为空时，则最后一排的数据也清空
+                  if (index < 2) {
+                    this.data.areaArray[index + 1] = [];
+                    this.setData({
+                      areaArray: this.data.areaArray
+                    });
+                  }
+                }
+              }
+            })
+          },
+          // 获取学校
+          getSchool(areaId) {
+            return new Promise((resolve) => {
+              let params = {
+                areaId
+              };
+              this.$api.user.school(params).then((res)=>{
+                if (res.rcode === 300) {
+                  this.setData({
+                    schoolArray: res.data.list
+                  })
+                  resolve(true)
+                }
+              })
+            })
+          },
+          // 获取学校
+          getSchoolList(areaId) {
+            let params = {
+              areaId
+            };
+            this.$api.user.school(params).then((res)=>{
+              if (res.rcode === 300) {
+                this.setData({
+                  schoolArray: res.data.list,
+                  schoolIndex: 0,
+                  schoolName: ''
+                })
+              }
+            })
+          },
+          bindKeyInput(e) {
+            this.setData({
+              stuName: e.detail.value
+            })
+          },
+          bindPickerChange(e) {
+            let index = e.detail.value;
+            this.setData({
+              gradeIndex: index,
+              gradeName: this.data.gradeArray[index].name,
+              grade: this.data.gradeArray[index].id
+            })
+          },
+          bindPickerChangeClass(e) {
+            let index = e.detail.value;
+            this.setData({
+              classIndex: index,
+              className: this.data.classArray[index].name,
+              classNo: this.data.classArray[index].id
+            })
+          },
+          // 地区选择完确定
+          bindPickerChangeArea(e) {
+            let value = e.detail.value;
+            this.setData({
+              areaIndex: value
+            });
+            let getSchool = true;
+            for (let i = 2; i > -1; i--) {
+              if (this.data.areaArray[i].length > 0) {
+                let index = value[i];
+                let id = this.data.areaArray[i][index].id;
+                let name = this.data.areaArray[i][index].name;
+                if (i === 2) {
+                  this.setData({
+                    townId: id !== -1 ? id : '',
+                    townName: id !== -1 ? name : ''
+                  })
+                } else if (i === 1) {
+                  this.setData({
+                    cityId: id !== -1 ? id : '',
+                    cityName: id !== -1 ? name : ''
+                  })
+                } else {
+                  this.setData({
+                    provinceId: id !== -1 ? id : '',
+                    provinceName: id !== -1 ? name : ''
+                  })
+                }
+                if (getSchool && id !== -1) {
+                  this.getSchoolList(id);
+                  getSchool = false
+                }
+
+              } else {
+                if (i === 2) {
+                  this.setData({
+                    townId: '',
+                    townName: ''
+                  })
+                } else if (i === 1) {
+                  this.setData({
+                    cityId: '',
+                    cityName: ''
+                  })
+                } else {
+                  this.setData({
+                    provinceId: '',
+                    provinceName: ''
+                  })
+                }
+              }
+            }
+          },
+          /*bindMultiPickerColumnChange(e) {
+            console.log('修改的列为', e.detail.column, '，值为', e.detail.value);
+            let column = e.detail.column;
+            let value = e.detail.value;
+            if (this.data.areaArray[column].length === 0) {
+              return
+            }
+            let id = this.data.areaArray[column][value].id;
+            if (column < 2) {
+              column++;
+              this.getAreaList(id, column);
+            }
+          },*/
+          async bindMultiPickerColumnChange(e) {
+            console.log('修改的列为', e.detail.column, '，值为', e.detail.value);
+            let column = e.detail.column;
+            let value = e.detail.value;
+            let data = {
+              areaArray: this.data.areaArray,
+              areaIndex: this.data.areaIndex
+            };
+            data.areaIndex[e.detail.column] = e.detail.value;
+            switch (e.detail.column) {
+              case 0:
+                let res = await this.getPinkArea(data.areaArray[column][value].id);
+                if (res.length > 0) { // 如果需要加入全部
+                  res.unshift({name: '全部', id: -1});
+                }
+                data.areaArray[1] = res;
+
+                if (res.length === 0) {
+                  data.areaArray[2] = [];
+                } else {
+                  let result = await this.getPinkArea(res[0].id);
+                  if (result.length > 0) { // 如果需要加入全部
+                    result.unshift({name: '全部', id: -1});
+                  }
+                  data.areaArray[2] = result;
+                }
+                data.areaIndex[1] = 0;
+                data.areaIndex[2] = 0;
+                break
+              case 1:
+                let resTown = await this.getPinkArea(data.areaArray[column][value].id);
+                if (resTown.length > 0) { // 如果需要加入全部
+                  resTown.unshift({name: '全部', id: -1});
+                }
+                data.areaArray[2] = resTown;
+                data.areaIndex[2] = 0;
+            }
+            this.setData(data);
+          },
+          async getPinkArea(parentId) {
+            let params = {
+              parentId
+            };
+            return new Promise((resolve, reject) => {
+              this.$api.user.area(params).then((res)=>{
+                if (res.rcode === 300) {
+                  resolve(res.data.list)
+                } else {
+                  resolve([])
+                }
+              }).catch((err)=>{
+                reject([])
+              });
+            })
+          },
+          bindPickerChangeSchool(e) {
+            let index = e.detail.value;
+            this.setData({
+              schoolIndex: index,
+              schoolName: this.data.schoolArray[index].name,
+              schoolId: this.data.schoolArray[index].id
+            })
+          },
+          // 提交资料
+          async submitData() {
+            if (this.data.stuName === '') {
+              this.$toast('请输入学生姓名');
+              return false
+            }
+            if (this.data.gradeIndex === '') {
+              this.$toast('请选择年级');
+              return false
+            }
+            if (this.data.classIndex === '') {
+              this.$toast('请选择班级');
+              return false
+            }
+            if (this.data.schoolIndex === '') {
+              this.$toast('请选择学校');
+              return false
+            }
+            let code = await wechat.getLoginCode();
+            let params = {
+              code,
+              access_token: wx.getStorageSync('accessToken'),
+              classNo: this.data.classNo,
+              grade: this.data.grade,
+              op: this.data.opType,
+              schoolId: this.data.schoolId,
+              stuName: this.data.stuName
+            };
+            let res = await this.$api.user.updateStu(params);
+            if (res.rcode === 300) {
+              if (this.data.opType === 'edit'){
+                this.$router.redirect('/pages/home/home');
+              } else {
+                this.$router.back()
+              }
+            } else {
+              this.$toast(res.message);
+            }
+          }
+        }
+    })
+</script>
+<style lang="scss" src="./personalData.scss"></style>

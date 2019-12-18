@@ -1,0 +1,43 @@
+<config>
+  {
+  "component": true
+  }
+</config>
+<template>
+  <view class="none-wrapper">
+    <view class="none-pic pt-20">
+      <image src="../../assets/images/common/none.png" wx:if="{{noneType === 'normal'}}"></image>
+      <image src="../../assets/images/common/hw-blank.png" wx:elif="{{noneType === 'homework'}}"></image>
+    </view>
+    <view class="none-tips pt-10 pb-20">
+      <slot name="tips"></slot>
+    </view>
+    <view class="none-tips-text pb-20">
+      <slot name="tipsText"></slot>
+    </view>
+  </view>
+</template>
+<script>
+  import { Component } from '@tinajs/tina';
+  Component.define({
+    options: {
+      addGlobalClass: true,
+      multipleSlots: true // 在组件定义时的选项中启用多slot支持
+    },
+    properties: {
+      noneType: {
+        type: String, // 类型（必填），目前接受的类型包括：String, Number, Boolean, Object, Array, null（表示任意类型）
+        value: 'normal', // normal = 普通空箱子   homework = 作业列表
+        observer: function(newVal, oldVal, changedPath) {}
+      }
+    },
+    data: {},
+    created () {},
+    attached () {},
+    ready () {},
+    moved () {},
+    detached () {},
+    methods: {},
+  })
+</script>
+<style lang="scss" src="./baseNone.scss"></style>

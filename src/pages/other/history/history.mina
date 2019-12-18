@@ -1,0 +1,126 @@
+<config>
+  {
+  "component": true,
+  "navigationBarTitleText":"动态",
+  "usingComponents": {
+  "baseNone": "../../../components/baseNone/baseNone.mina",
+  "pagation": "../../../components/pagation/pagation.mina",
+  "scroller-top": "../../../components/scroller-top/scroller-top.mina",
+  }
+  }
+</config>
+<template>
+  <view class="page-wrapper">
+    <view class="box-wrapper mb-20">
+      <view class="box-tit pl-10 ml-30 mr-30 mt-30 mb-30">
+        <text class="tit">我的动态</text>
+      </view>
+      <view class="foot-wrapper pr-40">
+        <block wx:if="{{footStops.length>0}}">
+          <view class="foot-item pl-25 pt-35 pb-35 flex flex-align-center" wx:for="{{footStops}}" wx:key="{{item.id}}">
+            <view class="foot-time">{{item.createTime}}</view>
+            <view class="foot-cont flex1">
+              <text class="blue mr-10">{{userInfo.name}}</text>
+              <!--视频-->
+              <block wx:for="{{item.stepLiteModels}}" wx:for-item="step" wx:for-index="setpIndex" wx:key="{{setpIndex}}">
+                <block wx:if="{{step.type==1}}">
+                  <text wx:if="{{item.stepLiteModels.length>1}}">{{setpIndex+1}}.</text>观看了<text class="blue"><block wx:for="{{step.resourceList}}" wx:for-item="res" wx:for-index="resIndex" wx:key="{{resIndex}}">{{res}}<block wx:if="{{resIndex!=step.resourceList.length-1}}">、</block></block></text>
+                  等 <text class="blue">{{step.count}}</text> 个课程视频
+                </block>
+                <!--作业-->
+                <block wx:elif="{{step.type==3}}">
+                  <text wx:if="{{item.stepLiteModels.length>1}}">{{setpIndex+1}}.</text>完成了<text class="blue"><block wx:for="{{step.resourceList}}" wx:for-item="res" wx:for-index="resIndex" wx:key="{{resIndex}}">{{res}}<block wx:if="{{resIndex!=step.resourceList.length-1}}">、</block></block></text>
+                  等<text class="blue">{{step.count}}</text>项作业
+                </block>
+              </block>
+            </view>
+          </view>
+          <pagation params="{{params}}"></pagation>
+        </block>
+        <block wx:else>
+          <baseNone>
+            <text slot="tips">暂无动态</text>
+          </baseNone>
+        </block>
+      </view>
+    </view>
+  </view>
+  <scroller-top scrollTop="{{scrollTop}}"></scroller-top>
+</template>
+<script>
+  import {Page} from '@tinajs/tina';
+
+  Page.define({
+    data: {
+      footStops: [],
+      params:{
+        offSet:0,
+        offSize:6,
+        totalPage: 1
+      },
+    },
+    beforeLoad() {
+    },
+    onLoad() {
+    },
+    onReady() {
+    },
+    onShow() {
+      this.data.params.offSet=0;
+      this.getFootstep(true);
+    },
+    onHide() {
+    },
+    onUnload() {
+    },
+    compute() {
+    },
+    methods: {
+      async getFootstep(cover){
+        this.setData({
+          "params.loading": true
+        });
+        let res =await this.$api.other.getLearnStep(this.data.params);
+        if(res.rcode===300){
+          res.data.learnStepList.map((item)=>{
+            item.createTime=dayjs(item.createTime).format('MM-DD');
+            item.stepLiteModels.map(child=>{
+              child.resourceList=child.resourcename.split(',');
+            })
+          });
+          this.data.params.totalPage=res.data.totalPages;
+          this.data.params.offSet++;
+
+          if(cover){
+            this.data.footStops=res.data.learnStepList;
+          }else{
+            this.data.footStops.concat(res.data.learnStepList);
+          }
+          this.setData({
+            footStops:this.data.footStops,
+            params:this.data.params
+          })
+        }
+        this.setData({
+          "params.loading": false
+        });
+        if (this.data.params.totalPage === this.data.params.offSet){
+          this.setData({
+            'params.nothing': true
+          })
+        }
+      },
+    },
+    onPageScroll({scrollTop}) {
+      this.setData({
+        'scrollTop': scrollTop
+      })
+    },
+    onReachBottom() {
+      if (this.data.params.offSet < this.data.params.totalPage){
+        this.getFootstep();
+      }
+    }
+  })
+</script>
+<style lang="scss" src="./history.scss"></style>

@@ -1,0 +1,34 @@
+@import "./../../assets/style/base.scss";
+
+.scroll-video-wrapper {
+  white-space: nowrap;
+  .video-item {
+    display: inline-block;
+    width: 270px;
+    .video-pic {
+      border-radius: 8px;
+      overflow: hidden;
+      @include fullPic(270px, 182px);
+      position: relative;
+      .play-icon {
+        width: 46px;
+        height: 46px;
+        color: #fff;
+        font-size: 46px;
+        text-align: center;
+        line-height: 46px;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        margin-left: -23px;
+        margin-top: -23px;
+        z-index: 10;
+      }
+    }
+    .video-item-tit {
+      height: 36px;
+      line-height: 36px;
+      font-weight: bold;
+    }
+  }
+}

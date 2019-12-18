@@ -1,0 +1,330 @@
+<config>
+  {
+  "component": true,
+  "usingComponents": {
+  "modal": "../components/modal/modal.mina"
+  }
+  }
+</config>
+<template>
+  <block wx:if="{{!loading}}">
+    <view class="full-page flex-v">
+      <view class="register-banner">
+        <image class="banner" src="../assets/images/login/register-bg.jpg"></image>
+        <view class="register-banner-views">
+          <view class="title">HELLO</view>
+          <view class="cont">欢迎来到语智通</view>
+        </view>
+        <view class="register-banner-footer"></view>
+      </view>
+      <view class="main register-wrapper flex1">
+        <view class="register-form">
+          <view class="flex flex-align-center register-box mt-20">
+            <view class="icon icon-mobile mr-30"></view>
+            <input class="flex1 input-box" type="text" placeholder="输入手机号码" value="{{login.mobile}}" data-type="mobile" maxlength="11" bindinput="changeValue" />
+          </view>
+          <view class="flex flex-align-center register-box mt-20">
+            <view class="icon icon-shield mr-30"></view>
+            <input class="flex1 input-box" type="text" maxlength="6" placeholder="输入验证码" value="{{login.validateCode}}" data-type="validateCode" bindinput="changeValue" />
+            <view class="{{btnDisabled ? 'code-count-down':'code-btn'}}" catchtap="getCode">{{btnText}}</view>
+          </view>
+        </view>
+      </view>
+      <view class="register-wrapper">
+        <view class="submit-btn" bind:tap="loginSubmit">注册并登录</view>
+      </view>
+      <view class="flex register-wrapper agreement-box mt-30 pb-50">
+        <view class="radio-btn {{agreementType ? 'radio-true icon icon-great' : ''}}" bind:tap="setAgreementType"></view>
+        <view class="flex1 agreement-cont">我已阅读并同意<text bind:tap="toggleModal">《用户服务协议》</text>，同意将和教育普通用户免费升级到和教育语智通账户。</view>
+      </view>
+      <!--<view class="contact-box pt-50 pb-50 pl-30 pr-30">如果发现预留手机号错误，请
+        <view class="server-btn">联系客服 <button open-type="contact">进入客服会话</button></view>
+      </view>-->
+      <!--用户协议弹窗-->
+      <modal visable="{{visable}}" bindmodaltoggle="toggleModal">
+        <text slot="header">语智通网络平台服务条款</text>
+        <view slot="body" class="modalFontColor agreement-pop">
+          <view class="mb-20">
+            <view class="a-tit">一、 特别声明</view>
+            <view class="a-cont">1. 本服务条款是用户（您)与广东全通教育股份有限公司（以下简称全通）之间关于 “语智通”（以下简称本服务）服务产品的法律协议。</view>
+          </view>
+          <view class="a-tit">二、服务内容</view>
+          <view class="a-cont">和教育语智通小程序是广州全通优教教育科技有限公司开发的一款通过网络平台的家校互动与学科学习平台。提供学校老师与家长之间的消息通知、作业通知、报名投票等互动功能。同时，提供语文、数学、英语的智能作业布置、记录统计，使老师和家长快捷、轻松的掌握学生的三科知识的掌握情况，全面提升学生的学业水平。平台中还提供语数英三科的付费视频课程。学生使用和教育语智通小程序完成作业及查看成绩这项服务是免费的。您可以通过手机登入小程序提交作业, 网络及电话通讯费用都是根据您的使用情况由其运营商收取。</view>
+        </view>
+        <view slot="footer" class="btn-group flex" >
+          <text class="btn btn-gray btn-plain btn-lg flex1" catchtap="toggleModal">关闭</text>
+        </view>
+      </modal>
+      <!--用户协议弹窗-end-->
+    </view>
+  </block>
+  <block wx:else>
+    <view class="loading flex flex-align-center">
+      <view class="loading-warp">
+        <image src="../assets/images/common/loading.svg"></image>
+        <view class="tips">正在加载...</view>
+      </view>
+    </view>
+  </block>
+</template>
+<script>
+  import { Page } from '@tinajs/tina';
+  import wechat from '@/until/wechat'
+  import {tinax} from '@/store'
+  import { awaitWrap } from './../js/common'
+  Page.define({
+    mixins: [
+      tinax.connect({
+        getters (getters) {
+          return {
+            infoUser: getters.userInfo(),
+          };
+        },
+        actions ({setUserInfo, setJoinClassId}) {
+          return {
+            setUserInfo, setJoinClassId
+          }
+        },
+      }),
+    ],
+    data: {
+      login:{
+        validateCode:'',
+        mobile:''
+      },
+      agreementType: false,
+      btnText:'获取验证码',
+      btnDisabled:true,
+      timer:60,
+      interval:'',
+      loading:true,
+      params:{
+        clientId:'lite',
+        secret:'qkt',
+        userType:1,
+      },
+      register: false,
+      visable: false,
+    },
+    beforeLoad() {
+    },
+    async onLoad() {
+      const query = wx.getLaunchOptionsSync().query
+      if (query.classysId !== undefined) {
+        this.setJoinClassId(parseInt(query.classysId))
+      }
+      let accessToken = wx.getStorageSync('accessToken');
+      if(this.$route.query.fromPath){
+        this.data.fromPath = this.$route.query.fromPath;
+      }
+      if(accessToken){
+        let isPass = await this.getUserInfo();
+        if (isPass) {
+          if(this.data.fromPath){
+            this.$router.redirect(this.data.fromPath);
+          }else{
+            // this.$router.redirect('/pages/login/personalData/personalData');
+            this.$router.redirect('/pages/home/home');
+          }
+        } else {
+          this.login();
+        }
+      }else{
+        this.login();
+      }
+    },
+    onReady() {
+      wx.setNavigationBarTitle({
+        title: '登录'
+      });
+    },
+    onShow() {
+    },
+    onHide() {
+    },
+    onUnload() {
+    },
+    compute() {
+    },
+    methods: {
+      //更改输入框值
+      changeValue(e){
+        let type=e.currentTarget.dataset.type;
+        this.data.login[type]=e.detail.value;
+        if(type==='mobile' && e.detail.value.length===11){
+          this.setData({
+            btnDisabled:false
+          })
+        }else if (type==='mobile' && e.detail.value.length !==11) {
+          this.setData({
+            btnDisabled:true
+          })
+        }
+        this.setData({
+          login:this.data.login
+        })
+      },
+      //获取验证码
+      async getCode(){
+        if (this.data.login.mobile === '') {
+          this.$toast('请先填写信息');
+          return false;
+        }
+        if(!(/^1[3-9]\d{9}$/.test(this.data.login.mobile))){
+          this.$toast('手机格式有误，请重新输入');
+          return false;
+        }
+        if(!this.data.btnDisabled && (this.data.btnText==='获取验证码' || this.data.btnText === '重新获取')){
+          wx.showLoading({
+            title: '加载中',
+            mask:true
+          });
+          let code = await wechat.getLoginCode();
+          let params = {
+            code,
+            mobile:this.data.login.mobile,
+            userType:this.data.params.userType,
+          };
+          let res=await this.$api.until.sendSms(params);
+          wx.hideLoading();
+          if(res.rcode===300 || res.rcode === 406){
+            this.$message.success('验证码已发送');
+            this.setData({
+              btnDisabled:true
+            });
+            this.interval=setInterval(()=>{
+              if(this.data.timer>0){
+                this.data.timer--;
+                this.setData({
+                  btnText:this.data.timer+'秒后获取'
+                })
+              }else{
+                clearInterval(this.interval);
+                this.data.timer=60;
+                this.setData({
+                  btnText:'重新获取',
+                  btnDisabled:false
+                })
+              }
+            },1000);
+
+            if (res.rcode === 406) {
+              this.setData({
+                register: true
+              })
+            }
+          }
+        }
+      },
+      async loginSubmit(){
+        if(this.data.login.mobile===''){
+          // this.$toast('手机号码不能为空');
+          wx.showToast({
+            title: '手机号码不能为空',
+            icon: 'none',
+            duration: 1500
+          });
+          return false;
+        }
+        if(!(/^1[3-9]\d{9}$/.test(this.data.login.mobile))){
+          // this.$toast('手机号码格式不正确，请重新填写');
+          wx.showToast({
+            title: '手机号码格式不正确，请重新填写',
+            icon: 'none',
+            duration: 1500
+          });
+          return false;
+        }
+        if(this.data.login.validateCode===''){
+          // this.$toast('验证码不能为空');
+          wx.showToast({
+            title: '验证码不能为空',
+            icon: 'none',
+            duration: 1500
+          });
+          return false;
+        }
+        if (!this.data.agreementType) {
+          // this.$toast('请先阅读并同意《用户服务协议》');
+          wx.showToast({
+            title: '请先阅读并同意《用户服务协议》',
+            icon: 'none',
+            duration: 1500
+          });
+          return false;
+        }
+        let code=await wechat.getLoginCode();
+        let res= await this.$api.user.login({
+          code:code,
+          register: this.data.register,
+          ...this.data.login,
+          ...this.data.params
+        });
+        if(res.rcode===300){
+          wx.setStorageSync('accessToken', res.data.access_token);
+          if (this.data.register) {
+            this.$router.redirect('/pages/login/data/data');
+          } else {
+            if(this.data.fromPath){
+              this.$router.redirect(this.data.fromPath);
+            }else{
+              this.$router.redirect('/pages/home/home');
+            }
+          }
+        }else{
+          this.$toast(res.message);
+        }
+      },
+      async login(){
+        let code=await wechat.getLoginCode();
+        let res=await this.$api.user.login({code:code,...this.data.params});
+        if(res.rcode===300){
+          wx.setStorageSync('accessToken', res.data.access_token);
+          await this.getUserInfo()
+          if(this.data.fromPath){
+            this.$router.redirect(this.data.fromPath);
+          }else{
+            this.$router.redirect('/pages/home/home');
+          }
+        }else{
+          this.setData({
+            loading:false
+          })
+        }
+      },
+      // 勾选协议
+      setAgreementType() {
+        this.setData({
+          agreementType: !this.data.agreementType
+        })
+      },
+      toggleModal(e){
+        return
+        if(e && e.type && e.type==='modaltoggle'){
+          this.setData({
+            visable:e.detail
+          })
+        }else{
+          this.setData({
+            visable:!this.data.visable
+          })
+        }
+      },
+      async getUserInfo(){
+        let accessToken = wx.getStorageSync('accessToken');
+        let params = {
+          access_token: accessToken
+        };
+        let [err, res] = await awaitWrap(this.$api.user.getSetting(params));
+        console.log(err, res)
+        if(res !== null && res.rcode === 300){
+          this.setUserInfo(res.data);
+          return true
+        } else {
+          return false
+        }
+      },
+    }
+  })
+</script>
+<style lang="scss" src="./login.scss"></style>

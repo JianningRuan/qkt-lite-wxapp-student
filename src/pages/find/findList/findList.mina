@@ -1,0 +1,38 @@
+<template>
+  <view>
+    <!--头部tab-->
+    <scroll-view scroll-x="true" class="find-tab">
+      <view class="tab-item pl-25 pr-25 active">视频课程</view>
+      <view class="tab-item pl-25 pr-25">在线图书</view>
+      <view class="tab-item pl-25 pr-25">答题闯关</view>
+      <view class="tab-item pl-25 pr-25">互动社区</view>
+      <view class="tab-item pl-25 pr-25">乐学兔</view>
+      <view class="tab-item pl-25 pr-25">视频课程</view>
+      <view class="tab-item pl-25 pr-25">视频课程</view>
+    </scroll-view>
+    <!--头部tab-end-->
+  </view>
+</template>
+<script>
+    import { Page } from '@tinajs/tina';
+
+    Page.define({
+        data: {},
+        beforeLoad() {
+        },
+        onLoad() {
+        },
+        onReady() {
+        },
+        onShow() {
+        },
+        onHide() {
+        },
+        onUnload() {
+        },
+        compute() {
+        },
+        methods: {}
+    })
+</script>
+<style lang="scss" src="./findList.scss"></style>

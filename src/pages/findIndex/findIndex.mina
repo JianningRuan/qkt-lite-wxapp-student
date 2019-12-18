@@ -1,0 +1,146 @@
+<config>
+  {
+    "usingComponents": {
+      "baseScrollVideo": "../../components/baseScrollVideo/baseScrollVideo.mina",
+      "calcSelect": "../../components/calc/select.mina"
+    }
+  }
+</config>
+
+<template>
+  <view>
+    <!--头部tab-->
+    <scroll-view scroll-x class="find-tab">
+      <view class="tab-item pl-25 pr-25 {{tabActive==0?'active':''}}" bind:tap="changeActiveTab" data-type="0">学科工具</view>
+      <view class="tab-item pl-25 pr-25 {{tabActive==1?'active':''}}" bind:tap="changeActiveTab" data-type="1">视频课程</view>
+      <view class="tab-item pl-25 pr-25" bind:tap="noneTips">在线图书</view>
+      <view class="tab-item pl-25 pr-25" bind:tap="noneTips">互动社区</view>
+      <view class="tab-item pl-25 pr-25" bind:tap="noneTips">乐学兔</view>
+    </scroll-view>
+    <!--头部tab-end-->
+
+    <block wx:if="{{tabActive===0}}">
+      <calcSelect></calcSelect>
+    </block>
+
+    <!--视频课程-->
+    <block wx:elif="{{tabActive===1}}">
+      <view class="tab-tit-wrapper">
+        <image src="../../assets/images/find/tab-tit.png"></image>
+        <view class="tab-tit">
+          <text>视频课程</text>
+        </view>
+        <view class="grade-btn">
+          <image src="../../assets/images/find/grade-btn.png"></image>
+          <buttton>
+            <picker bindchange="bindPickerChange"  value="{{gradeIndex}}" range="{{gradeList}}" range-key="key">
+              <view class="picker">
+                {{gradeList[gradeIndex].key}}<text class="iconfont icon-xiala"></text>
+              </view>
+            </picker>
+          </buttton>
+        </view>
+      </view>
+      <view class="box-wrapper mb-20" wx:for="{{courseList}}" wx:key="{{item.id}}">
+        <view class="box-tit pl-10 ml-30 mr-30 mt-30 mb-30">
+          <text class="tit">{{item.name}}</text>
+          <navigator url="/pages/video/videoList/videoList?courseId={{item.id}}" class="more fr">更多<text class="icon icon-right"></text></navigator>
+        </view>
+        <baseScrollVideo list="{{item.lessonList}}" />
+      </view>
+    </block>
+
+    <!--<navigator class="challenge-box flex flex-pack-justify flex-align-center blue-box ml-30 mr-30 mt-30" url="/pages/fastReckon/fastReckonIndex/fastReckonIndex">
+      <view class="challenge-cont flex flex-v flex-pack-justify">
+        <view class="tit">口算小天才</view>
+        <view class="detail">今日已有23名同学完成挑战</view>
+      </view>
+      <view class="challenge-btn">我要挑战</view>
+    </navigator>
+    <view class="challenge-box flex flex-pack-justify flex-align-center blue-box ml-30 mr-30 mt-30">
+      <view class="challenge-cont flex flex-v flex-pack-justify">
+        <view class="tit">口算小天才</view>
+        <view class="detail">今日已有23名同学完成挑战</view>
+      </view>
+      <view class="challenge-btn">我要挑战</view>
+    </view>-->
+
+  </view>
+</template>
+<script>
+    import { Page } from '@tinajs/tina';
+    import wechat from '@/until/wechat';
+
+    Page.define({
+        data: {
+          scrollX: true,
+          params:{
+            offSize:6,
+            subject:0
+          },
+          courseList:[],
+          gradeList:wechat.getGradeList(),
+          gradeIndex:0,
+          tabActive:0,
+        },
+        beforeLoad() {
+        },
+        onLoad() {
+          wx.setNavigationBarTitle({
+            title: '发现'
+          });
+        },
+        onReady() {
+        },
+        onShow() {
+
+        },
+        onHide() {
+        },
+        onUnload() {
+        },
+        compute() {
+        },
+        methods: {
+          noneTips(){
+            wx.showModal({
+              title: '提示',
+              content: '暂未开放，敬请期待',
+              showCancel: false
+            })
+          },
+          async getList(){
+            this.data.params.gradeOrder=this.data.gradeList[this.data.gradeIndex].value;
+            let res= await this.$api.course.getList(this.data.params);
+            if(res.data && res.data.courseList){
+              this.setData({
+                courseList:res.data.courseList
+              })
+            }
+          },
+          bindPickerChange(e){
+            let value=e.detail.value;
+            this.data.gradeIndex=value;
+            this.setData({
+              gradeIndex:value
+            });
+            //重新设置分页加载数据
+            this.getList();
+          },
+          toFastReckon(){
+            this.$router.navigate(`/pages/fastReckon/fastReckonIndex/fastReckonIndex`);
+          },
+          //更改tabactive
+          changeActiveTab(e){
+            let type=parseInt(e.currentTarget.dataset.type);
+            this.setData({
+              tabActive:type
+            });
+            if(type==1){
+              this.getList();
+            }
+          }
+        }
+    })
+</script>
+<style lang="scss" src="./findIndex.scss"></style>

@@ -1,0 +1,52 @@
+@import "./../../../assets/style/base.scss";
+
+page {
+  height: 100%;
+}
+
+.user-list {
+
+  .user-list-item {
+    border-bottom: 2px solid $lineColor;
+    .user-cont {
+      .user-head {
+        @include headPic(72px, 72px);
+      }
+      .user-data {
+        .user-name {
+          font-size: 28px;
+          font-weight: bold;
+          text {
+            font-weight: normal;
+            font-size: 24px;
+          }
+        }
+        .user-school {
+          font-size: 24px;
+          color: #999999;
+        }
+      }
+    }
+
+    .great-icon {
+      font-size: 24px;
+      color: $bgColor;
+    }
+
+    .add-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 3px solid $bgColor;
+      font-size: 22px;
+      font-weight: bold;
+      color: $bgColor;
+      text-align: center;
+      line-height: 40px;
+    }
+    .add-text {
+      font-size: 28px;
+      color: $bgColor;
+    }
+  }
+}

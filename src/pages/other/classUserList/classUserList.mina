@@ -1,0 +1,194 @@
+<config>
+  {
+    "component": true,
+    "navigationBarTitleText":"我的班级",
+    "usingComponents": {
+      "baseNone": "../../../components/baseNone/baseNone.mina",
+      "modal": "../../../components/modal/modal.mina",
+    }
+  }
+</config>
+<template>
+  <view>
+    <view class="class-top">
+      <image class="other-bg" src="../../../assets/images/other/other-bg.jpg"></image>
+      <view class="class-msg-box flex flex-align-center">
+        <view class="class-avatar-box mr-30">
+          <image class="class-avatar" src="../../../assets/images/other/class-avatar.jpg"></image>
+          <image class="class-icon" src="../../../assets/images/other/class-pic-icon.png"></image>
+        </view>
+        <view class="class-msg flex flex-v flex-pack-justify">
+          <view class="class-name flex flex-align-center"><text class="mr-20">{{className || '你还没加入班级'}}</text><view class="more iconfont icon-more" bindtap="showClassActionSheet" wx:if="{{className !== '' && className !== undefined}}"></view></view>
+          <view class="class-info">{{schoolName}}<text class="pl-10 pr-10" wx:if="{{className !== '' && className !== undefined}}">/</text>{{stuLength}}名同学</view>
+        </view>
+      </view>
+      <view class="tab-tit-wrapper">
+        <image src="../../../assets/images/other/other-tab-tit.png"></image>
+        <scroll-view scroll-x class="class-tab">
+          <view class="tab-item pl-25 pr-25 active">班级成员</view>
+        </scroll-view>
+      </view>
+    </view>
+    <view class="class-user-list pl-30 pr-30">
+      <view class="class-user-item flex flex-align-center flex-pack-justify" wx:for="{{classmate}}" wx:for-index="idx" wx:key="{{idx}}" data-type="{{item.type}}" data-mobile="{{item.mobile}}" bindtap="toShowCall">
+        <view class="user-msg flex flex-align-center">
+          <view class="avatar mr-20">
+            <image src="{{item.pic}}" wx:if="{{item.pic !== null && item.pic !== undefined}}"></image>
+            <image src="../../../assets/images/common/student-head.png" wx:else></image>
+          </view>
+          <view class="user-name">{{item.name}}</view>
+          <view class="tch-label" wx:if="{{item.type === 0}}">老师</view>
+        </view>
+        <view class="right-icon iconfont icon-right" wx:if="{{item.type === 0}}"></view>
+      </view>
+    </view>
+  </view>
+
+  <action-sheet hidden="{{actionSheetHidden}}" bindchange="actionSheetChange">
+    <action-sheet-item class="item" bindtap="quitClass">退出班级</action-sheet-item>
+    <action-sheet-cancel class="cancel">取消</action-sheet-cancel>
+  </action-sheet>
+
+  <action-sheet hidden="{{tchActionSheetHidden}}" bindchange="tchActionSheetChange">
+    <action-sheet-item class="item" bindtap="callTch">拨打电话</action-sheet-item>
+    <action-sheet-cancel class="cancel">取消</action-sheet-cancel>
+  </action-sheet>
+
+  <modal visable="{{visible}}" bindmodaltoggle="toggleVisible">
+    <text slot="header">退出班级</text>
+    <view slot="body">你正在退出<text class="orange-color">{{schoolName}} {{className}}</text>，是否确认退出班级？</view>
+    <view slot="footer" class="btn-group flex flex-align-center">
+      <text class="btn btn-primary btn-gray-line flex1" catchtap="submitQuit">确认退出</text>
+      <text class="btn btn-primary btn-lg flex1" catchtap="toggleVisible">再想想</text>
+    </view>
+  </modal>
+</template>
+<script>
+  import {Page} from '@tinajs/tina';
+  import {tinax} from '@/store'
+  Page.define({
+    mixins: [
+      tinax.connect({
+        getters (getters) {
+          return {
+            infoUser: getters.userInfo(),
+          };
+        }
+      }),
+    ],
+    data: {
+      classmate: [],
+      className: '',
+      schoolName: '',
+      pic: '',
+      actionSheetHidden: true,
+      tchActionSheetHidden: true,
+      visible: false,
+      stuLength: 0,
+      tchMobile: ''
+    },
+    beforeLoad() {
+    },
+    onLoad() {
+      this.getClassmate()
+    },
+    onReady() {
+    },
+    onShow() {
+    },
+    onHide() {
+    },
+    onUnload() {
+    },
+    compute() {
+    },
+    methods: {
+      getClassmate () {
+        const params = {
+          access_token: wx.getStorageSync('accessToken')
+        }
+        this.$api.other.getClassmate(params).then((res)=>{
+          if (res.rcode === 300) {
+            this.data.classmate = res.data.classmate
+            this.data.className = res.data.className
+            this.data.schoolName = res.data.schoolName
+            for (let i = 0, l = res.data.classmate.length; i < l; i++) {
+              if (res.data.classmate[i].type !== 0) {
+                this.data.stuLength++
+              }
+            }
+            this.setData({
+              classmate: this.data.classmate,
+              className: this.data.className,
+              schoolName: this.data.schoolName,
+              stuLength: this.data.stuLength
+            })
+          }
+        })
+      },
+      showClassActionSheet () {
+        this.setData({
+          actionSheetHidden: false
+        })
+      },
+      actionSheetChange (e) {
+        this.cancel()
+      },
+      cancel () {
+        this.setData({
+          actionSheetHidden: true
+        })
+      },
+      quitClass () {
+        this.cancel()
+        this.setData({
+          visible: true
+        })
+      },
+      toggleVisible () {
+        this.setData({
+          visible: false
+        })
+      },
+      submitQuit () {
+        const params = {
+          access_token: wx.getStorageSync('accessToken')
+        }
+        this.$api.other.quitClassys(params).then((res)=>{
+          this.toggleVisible()
+          if (res.rcode === 300) {
+            this.$toast('成功退出')
+            this.$router.redirect('/pages/home/home')
+          } else {
+            this.$toast(res.message)
+          }
+        })
+      },
+      toShowCall (e) {
+        const userType = parseInt(e.currentTarget.dataset.type);
+        const mobile = e.currentTarget.dataset.mobile
+        if (userType === 0) {
+          this.setData({
+            tchActionSheetHidden: false,
+            tchMobile: mobile
+          })
+        }
+      },
+      tchActionSheetChange (e) {
+        this.tchCancel()
+      },
+      tchCancel () {
+        this.setData({
+          tchActionSheetHidden: true
+        })
+      },
+      callTch () {
+        this.tchCancel()
+        wx.makePhoneCall({
+          phoneNumber: this.data.tchMobile.toString() //仅为示例，并非真实的电话号码
+        })
+      },
+    }
+  })
+</script>
+<style lang="scss" src="./classUserList.scss"></style>

@@ -1,0 +1,38 @@
+<config>
+    {
+    "component": true
+    }
+</config>
+<template>
+  <view class="type-wrapper">
+    <view class="type-tab flex absolute"><!--absolute-->
+      <view class="type-tab-li flex1">
+        dwdwqdqdqwqwdqw<text class="iconfont icon-down ml-10"></text>
+      </view>
+    </view>
+    <view class="type-list-wrapper">
+      <view class="type-list">
+        <view class="type-list-li flex flex-align-center"></view>
+      </view>
+    </view>
+    <view class="mask"></view>
+  </view>
+</template>
+<script>
+    import { Component } from '@tinajs/tina';
+
+    Component.define({
+      options: {
+        addGlobalClass: true,
+      },
+      properties: {},
+      data: {},
+      created () {},
+      attached () {},
+      ready () {},
+      moved () {},
+      detached () {},
+      methods: {},
+    })
+</script>
+<style lang="scss" src="./baseDropDownMenu.scss"></style>

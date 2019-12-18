@@ -1,0 +1,75 @@
+@import "./../../../assets/style/base.scss";
+
+page {
+  min-height: 100%;
+  background: $bgColor;
+}
+
+.hw-list-wrapper {
+  position: relative;
+  .month-btn {
+    @include fullPic(142px, 46px);
+    position: absolute;
+    top: 30px;
+    right: 30px;
+    .month-btn-text {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 142px;
+      height: 46px;
+      text-align: center;
+      line-height: 46px;
+      color: #ffffff;
+      text {
+        font-size: 24px;
+      }
+    }
+  }
+
+  .hw-tit {
+    position: relative;
+    @include fullPic(208px, 60px);
+    .hw-tit-cont {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 208px;
+      line-height: 52px;
+      text-align: center;
+      font-size: 30px;
+      font-weight: bold;
+      color: #ffffff;
+      -webkit-text-stroke: 3px #bd143c;
+    }
+  }
+}
+
+.hw-box {
+  margin-top: 14px;
+  position: relative;
+  &:after {
+    content: '';
+    width: 2px;
+    height: 20px;
+    background: $fontColor;
+    position: absolute;
+    top: -20px;
+    left: 40px;
+  }
+  .box-tit {
+    .task-icon {
+      @include fullPic(50px, 50px);
+    }
+    .task-tit-text {
+      font-weight: bold;
+    }
+  }
+  .task-state {
+    font-size: 24px;
+    color: #999999;
+    &.evaluate {
+      color: $bgColor;
+    }
+  }
+}

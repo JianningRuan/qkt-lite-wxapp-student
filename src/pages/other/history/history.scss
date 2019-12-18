@@ -1,0 +1,45 @@
+@import "./../../../assets/style/base.scss";
+page {
+  min-height: 100%;
+  background: $bgColor;
+  overflow: hidden;
+}
+.page-wrapper {
+  margin: 20px 24px;
+  border: 6px solid #4ba9c6;
+  border-radius: 10px;
+  background: #fff;
+}
+.foot-wrapper {
+  padding-left: 64px;
+  .foot-item {
+    border-left: 2px solid $lineColor;
+    position: relative;
+    &:after {
+      content: '';
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: $bgColor;
+      position: absolute;
+      top: 50%;
+      left: -8px;
+      margin-top: -9px;
+    }
+    .foot-time {
+      width: 100px;
+      color: $fontColor;
+      font-size: 20px;
+    }
+    .foot-cont {
+      width: 520px;
+      line-height: 42px;
+      word-wrap: break-word;
+      word-break: normal;
+      // word-break:break-all;
+      .blue {
+        color: $fontColor;
+      }
+    }
+  }
+}

@@ -1,0 +1,253 @@
+@import "~@/assets/style/base.scss";
+
+page {
+  height: 100%;
+}
+
+/*.login-banner {
+  @include fullPic(100%, 280px);
+}*/
+
+.register-banner {
+  position: relative;
+  .banner {
+    width: 100%;
+    height: 332px;
+  }
+  .register-banner-views {
+    position: absolute;
+    top: 80px;
+    left: 80px;
+    bottom: 80px;
+    right: 0;
+    .title {
+      font-size: 56px;
+      color: #fff;
+      line-height: 60px;
+    }
+    .cont {
+      font-size: 42px;
+      color: #fff;
+      line-height: 56px;
+    }
+  }
+  .register-banner-footer {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 34px;
+    background: #fff;
+    border-radius: 34px 34px 0 0;
+  }
+}
+
+.register-wrapper {
+  padding-left: 80px;
+  padding-right: 80px;
+}
+.register-form {
+  margin-bottom: 370px;
+  overflow: hidden;
+}
+
+.register-box {
+  border-bottom: 1px solid #e5e5e5;
+  padding-top: 20px;
+  padding-bottom: 20px;
+  .icon {
+    font-size: 32px;
+    color: #999;
+  }
+  .input-box {
+    height: 50px;
+    line-height: 50px;
+    color: #333;
+    font-size: 32px;
+    &::-webkit-input-placeholder{
+      color:#999;
+    }
+  }
+  .code-btn {
+    color: #8bd1e7;
+    font-size: 28px;
+  }
+  .code-count-down {
+    color: #999;
+    font-size: 28px;
+  }
+}
+
+.submit-btn {
+  width: 100%;
+  height: 88px;
+  line-height: 88px;
+  text-align: center;
+  color: #fff;
+  font-size: 34px;
+  background: #8bd1e7;
+  border-radius: 44px;
+  display: block;
+  box-shadow: 0 0 8px 4px rgba(102, 102, 102, 0.15);
+  &:active {
+    background: #62bdda;
+  }
+}
+.submit-btn-blank {
+  width: 100%;
+  height: 88px;
+  line-height: 88px;
+  text-align: center;
+  color: #fff;
+  font-size: 34px;
+  background: #999;
+  border-radius: 44px;
+  display: block;
+  box-shadow: 0 0 8px 4px rgba(102, 102, 102, 0.15);
+}
+
+.agreement-box {
+  .radio-btn {
+    width: 24px;
+    height: 24px;
+    border: 2px solid #999;
+    border-radius: 12px;
+    margin-right: 15px;
+    &.radio-true {
+      border: 2px solid #8bd1e7;
+      text-align: center;
+      line-height: 24px;
+      color: #8bd1e7;
+      font-size: 18px;
+    }
+  }
+  .agreement-cont {
+    color: #999;
+    font-size: 22px;
+    line-height: 36px;
+    text {
+      color: #8bd1e7;
+    }
+  }
+}
+
+.agreement-pop {
+  height: 600px;
+  overflow: auto;
+  .a-tit {
+    font-size: 32px;
+    // font-weight: bold;
+    line-height: 42px;
+  }
+  .a-cont {
+    font-size: 26px;
+    line-height: 32px;
+    text-indent: 2em;
+  }
+  .b {
+    font-weight: bold;
+  }
+}
+
+
+
+/*.phone-box {
+  height: 60px;
+  line-height: 60px;
+  .send-code-btn {
+    margin-left: 30rpx;
+    width: 160px;
+    height: 58px;
+    border: 1px solid $bgColor;
+    color: $bgColor;
+    line-height: 58px;
+    text-align: center;
+    font-size: 24px;
+    background: #ffffff;
+    border-radius: 8px;
+    &.disbaled{
+      border-color: #999999;
+      color: #999999;
+    }
+  }
+}
+
+.input-box {
+  .input-label {
+    width: 154px;
+    line-height: 64px;
+    height: 66px;
+  }
+  .input-text {
+    height: 64px;
+    line-height: 64px;
+    border-bottom: 2px solid $lineColor;
+    input{
+      width: 100%;
+    }
+  }
+}
+
+.login-btn {
+  display: block;
+  height: 88px;
+  border-radius: 44px;
+  line-height: 88px;
+  text-align: center;
+  background: $bgColor;
+  color: #fff;
+  font-size: 34px;
+  box-shadow: 0 0 4px 4px #f0f0f0;
+}
+
+.register-btn {
+  display: block;
+  height: 88px;
+  border-radius: 44px;
+  line-height: 84px;
+  text-align: center;
+  background: #fff;
+  border: 2px solid $bgColor;
+  box-sizing: border-box;
+  color: $bgColor;
+  font-size: 34px;
+  box-shadow: 0 0 4px 4px #f0f0f0;
+}
+
+.contact-box {
+  line-height: 48px;
+  color: #999999;
+  font-size: 24px;
+  text-align: center;
+  .server-btn {
+    color: $fontColor;
+    display: inline-block;
+    position: relative;
+    button{
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      z-index: 8;
+    }
+  }
+}*/
+
+.loading{
+  height: 100%;
+  .loading-warp{
+    margin: 0 auto;
+    text-align: center;
+    image{
+      width: 300rpx;
+      height: 300rpx;
+
+    }
+    .tips{
+      color: $bgColor;
+      margin-top: 30rpx;
+    }
+  }
+}

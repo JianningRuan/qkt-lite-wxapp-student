@@ -1,0 +1,540 @@
+<config>
+  {
+    "usingComponents": {
+      "modal": "../../../components/modal/modal.mina"
+    }
+  }
+</config>
+<template>
+  <view class="full-page main-bg">
+    <view class="flex1 main flex flex-v flex-pack-center flex-align-center">
+      <image class="bg1" src="../../../assets/images/fastReckon/fast-reckon-bg1.png"></image>
+      <image class="bg2" src="../../../assets/images/fastReckon/fast-reckon-bg2.png"></image>
+      <view class="countdown" wx:if="{{isShowCountDown}}">
+        <text class="">5</text>
+        <text class="">4</text>
+        <text class="">3</text>
+        <text class="">2</text>
+        <text class="" bindanimationend="countdownFinish">1</text>
+      </view>
+      <view class="tab-nav-wrapper">
+        <image src="../../../assets/images/fastReckon/nav-tit-bg.png"></image>
+        <view class="tab-nav-list flex">
+          <view class="tab-nav-item flex1 flex flex-pack-center flex-align-center">
+            <view class="tab-data">
+              <text>{{timerString}}</text>
+              <view class="tab-data-icon">
+                <image src="../../../assets/images/fastReckon/clock.png"></image>
+              </view>
+            </view>
+          </view>
+          <view class="tab-nav-item flex1 flex flex-pack-center flex-align-center">
+            <view class="tab-data">
+              <text>{{currentScore}}分</text>
+              <view class="tab-data-icon">
+                <image src="../../../assets/images/fastReckon/true.png"></image>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+      <view class="problem-title {{transition?'transition':''}}" bindtransitionend="toNextTopic" wx:if="{{isStart}}">
+        <block wx:for="{{currentTopic}}" wx:key="{{index}}">
+          <text wx:if="{{item!='#'}}">{{item}}</text>
+          <view wx:else class="result-num" catchtap="setCursorIndex" data-index="{{index}}"><text class="value">{{answers[index]?answers[index]:''}}</text><text class="cursor" wx:if="{{cursorIndex==index}}"></text></view>
+        </block>
+        <view class="result-icon {{isGrate?'success':'fail'}} flex flex-align-center" wx:if="{{isSubmit}}">
+          <text class="iconfont {{isGrate?'icon-great':'icon-close'}}"></text>
+        </view>
+      </view>
+      <view class="problem-title problem-title-next {{transition?'transition':''}}">
+        <block wx:for="{{nextTopic}}" wx:key="{{index}}">
+          <text wx:if="{{item!='#'}}">{{item}}</text>
+          <view wx:else class="result-num" catchtap="setCursorIndex" data-index="{{index}}"><text class="value">{{nextAnswers[index]}}</text><text class="cursor" wx:if="{{cursorIndex==index}}"></text></view>
+        </block>
+      </view>
+    </view>
+    <view class="keyboard flex flex-pack-justify pl-30 pr-30 pt-30">
+      <view class="num-keyboard flex flex-pack-justify flex-wrap-wrap">
+        <button class="key-btn" hover-class="active" hover-stay-time="{{hoverStayTime}}" catchtap="keydown" data-value="1">1</button>
+        <button class="key-btn" hover-class="active" hover-stay-time="{{hoverStayTime}}" catchtap="keydown" data-value="2">2</button>
+        <button class="key-btn" hover-class="active" hover-stay-time="{{hoverStayTime}}" catchtap="keydown" data-value="3">3</button>
+        <button class="key-btn" hover-class="active" hover-stay-time="{{hoverStayTime}}" catchtap="keydown" data-value="4">4</button>
+        <button class="key-btn" hover-class="active" hover-stay-time="{{hoverStayTime}}" catchtap="keydown" data-value="5">5</button>
+        <button class="key-btn" hover-class="active" hover-stay-time="{{hoverStayTime}}" catchtap="keydown" data-value="6">6</button>
+        <button class="key-btn" hover-class="active" hover-stay-time="{{hoverStayTime}}" catchtap="keydown" data-value="7">7</button>
+        <button class="key-btn" hover-class="active" hover-stay-time="{{hoverStayTime}}" catchtap="keydown" data-value="8">8</button>
+        <button class="key-btn" hover-class="active" hover-stay-time="{{hoverStayTime}}" catchtap="keydown" data-value="9">9</button>
+        <button class="key-btn long-btn" hover-class="active" hover-stay-time="{{hoverStayTime}}" catchtap="keydown" data-value="0">0</button>
+        <button class="key-btn" hover-class="active" hover-stay-time="{{hoverStayTime}}" catchtap="keydown" data-value=".">.</button>
+        <button class="key-btn" hover-class="active" hover-stay-time="{{hoverStayTime}}" catchtap="keydown" data-value=">"><text decode="true">&gt;</text></button>
+        <button class="key-btn" hover-class="active" hover-stay-time="{{hoverStayTime}}" catchtap="keydown" data-value="<"><text decode="true">&lt;</text></button>
+        <button class="key-btn" hover-class="active" hover-stay-time="{{hoverStayTime}}" catchtap="keydown" data-value="=">=</button>
+      </view>
+      <view class="opa-keyboard flex flex-pack-justify flex-wrap-wrap">
+        <button class="key-btn" hover-class="active" hover-stay-time="{{hoverStayTime}}" catchtap="keydown" data-value="delete">删除</button>
+        <button class="key-btn height-btn" hover-class="active" hover-stay-time="{{hoverStayTime}}" catchtap="confirm">确定</button>
+      </view>
+    </view>
+
+    <!--规则弹窗-->
+    <modal visable="{{visable}}" bindmodaltoggle="start">
+      <text slot="header">{{work && work.title && work.title!=''?'作业':'练习'}}要求</text>
+      <view slot="body">
+        <view class="reckon-modal-list flex flex-v flex-pack-justify" >
+          <view class="reckon-modal-item flex flex-align-center" wx:if="{{work && work.title && work.title!=''}}">
+            <image class="mr-30" src="../../../assets/images/fastReckon/work.svg"></image>
+            <text class="flex1 yl">{{work.title}}</text>
+          </view>
+          <view class="reckon-modal-item">
+            <image class="mr-30" src="../../../assets/images/fastReckon/clock.png"></image>
+            <text>限时{{allTimeMin}}分钟</text>
+          </view>
+          <view class="reckon-modal-item">
+            <image class="mr-30" src="../../../assets/images/fastReckon/true.png"></image>
+            <text>答对1题得1分<block wx:if="{{work && work.title && work.title!=''}}">，{{passScore}}分则达标</block></text>
+          </view>
+          <view class="reckon-modal-item">
+            <image class="mr-30" src="../../../assets/images/fastReckon/warning.png"></image>
+            <text>中途退出不记录成绩</text>
+          </view>
+        </view>
+      </view>
+      <view slot="footer" class="btn-group flex">
+        <text class="btn btn-primary btn-lg flex1" catchtap="start">开始作业</text>
+      </view>
+    </modal>
+    <!--规则弹窗-end-->
+
+    <!--作业结果弹窗-->
+    <view class="mask" wx:if="{{resultVisable}}"></view>
+    <view class="result-box box" wx:if="{{resultVisable}}">
+      <view class="result-title">
+        <image src="../../../assets/images/common/title-bg.png"></image>
+        <view class="result-title-text">口算成绩单</view>
+      </view>
+      <view class="result-label"> <!--作业才出现-->
+        <block wx:if="{{work && work.title && work.title!=''}}">
+          <image src="../../../assets/images/fastReckon/standard.png" wx:if="{{result.isReachStandard==1}}"></image>
+          <image src="../../../assets/images/fastReckon/not-standard.png" wx:else></image>
+        </block>
+      </view>
+      <view class="fraction-wrapper flex flex-pack-center flex-align-end">
+        <view class="fraction-box">
+          <view class="fraction-text">本次得分</view>
+          <view class="fraction">{{result.currentScore}}<text>分</text></view>
+          <view class="history-fraction">历史最高:{{result.bestScore}}分</view> <!--闯关才出现-->
+
+          <image class="cross cross1" src="../../../assets/images/fastReckon/cross-star.png"></image>
+          <image class="cross cross2" src="../../../assets/images/fastReckon/cross-star.png"></image>
+          <image class="cross cross3" src="../../../assets/images/fastReckon/cross-star.png"></image>
+        </view>
+      </view>
+      <view class="fraction-detail flex flex-pack-justify">
+        <view class="fraction-detail-item">
+          <image src="../../../assets/images/fastReckon/clock.png"></image>
+          <text>用时：{{useAllTime}}</text>
+        </view>
+        <view class="fraction-detail-item">
+          <image src="../../../assets/images/fastReckon/true.png"></image>
+          <text>答对：{{result.currentRightAmount}}题</text>
+        </view>
+      </view>
+      <view class="result-btn blue-btn mt-30" catchtap="again">再来一次</view>
+      <view class="result-btn blue-line-btn mt-30" catchtap="redirectIndex">返回</view>
+    </view>
+    <!--作业结果弹窗-end-->
+
+  </view>
+</template>
+<script>
+    import { Page } from '@tinajs/tina';
+
+    Page.define({
+        data: {
+          timer:120,
+          msTimer:0,
+          visable: false,
+          resultVisable: false,
+          transition:false,
+          isShowCountDown:false,
+          hoverStayTime:200,//按钮手指松开后点击态保留时间，单位毫秒,
+          cursorIndex:1,//当前光标位置
+          answers:[],//用户填写的答案
+          isSubmit:false, //是否已提交答案
+          currentScore:0,
+          currentTopic:[],//当前问题数组
+          activeIndex:0,//当前问题坐标
+          nextTopic:[],//下一问题问题数组
+          work:{},//作业详情
+          isStart:false,//是否开始了
+          answerMsg: [],//答案位置和个数
+          isGrate:false,//是否答对,
+          nextAnswers:[],
+          allTime:120,//答题时间秒
+          result:{},//结果
+          passScore:60,//及格分数
+          issues:[],
+        },
+        beforeLoad() {
+        },
+        onLoad() {
+          this.setData({
+            answers:[]
+          });
+          if(this.$route.query.workId){
+            this.getWorkDetail(this.$route.query.workId);
+            this.getWorkIssueList({homeworkItemId:this.$route.query.homeworkItemId});
+            this.homeworkRecordId=this.$route.query.workId;
+          }else if(this.$route.query.ruleIds){
+            this.getWorkIssueList({ruleIds:this.$route.query.ruleIds});
+          }
+          setTimeout(()=>{
+            this.setData({
+              visable:true
+            });
+          },500)
+        },
+        onReady() {
+        },
+        onShow() {
+          //如果是隐藏页面后再进入时重新开启计时
+          if(this.data.isStart){
+            this.startCountDownIntervar();
+          }
+        },
+        onHide() {
+          //退出或隐藏页面，停止计时
+          this.stopCountDown();
+
+
+        },
+        onUnload() {
+          //退出或隐藏页面，停止计时
+          this.stopCountDown();
+          this.data.answers=[];
+        },
+        compute ({ timer,allTime }) {
+          return {
+            timerString:this.setTimerString(timer),
+            useAllTime:this.setTimerString(allTime),
+            allTimeMin:parseFloat(allTime/60)
+          }
+        },
+        methods: {
+          toggleVisable(e){
+            if(e.type && e.type=='modaltoggle'){
+              this.setData({
+                visable:e.detail
+              })
+            }else{
+              this.setData({
+                visable:!this.data.visable
+              })
+            }
+          },
+          async redirectIndex(){
+            await this.initData();
+            this.$router.back();
+          },
+          transitionStart(){
+            return new Promise((resolve)=>{
+              this.setData({
+                transition:true
+              });
+              setTimeout(()=>{
+                resolve();
+              },1000);
+            })
+          },
+          transitionEnd(){
+            this.setData({
+              transition:false
+            });
+          },
+          //设置光标位置
+          setCursorIndex(e){
+            let index=parseInt(e.currentTarget.dataset.index);
+            this.setData({
+              cursorIndex:index
+            })
+          },
+          //按键点击事件
+          keydown(e){
+            let value=e.currentTarget.dataset.value;
+            //删除按钮
+            if(value=='delete'){
+              if(this.data.answers[this.data.cursorIndex] && this.data.answers[this.data.cursorIndex].length>0){
+                this.data.answers[this.data.cursorIndex]=this.data.answers[this.data.cursorIndex].substring(0,this.data.answers[this.data.cursorIndex].length-1);
+              }
+            }else{
+              if(this.data.answers[this.data.cursorIndex]){
+                if(this.data.answers[this.data.cursorIndex].length<6){
+                  this.data.answers[this.data.cursorIndex]=this.data.answers[this.data.cursorIndex]+value;
+                }else{
+                  this.$toast('最多输入6个字符哦');
+                  return false;
+                }
+              }else{
+                this.data.answers[this.data.cursorIndex]=value;
+              }
+            }
+            this.setData({
+              answers:this.data.answers
+            })
+          },
+          //设置倒计时显示格式
+          setTimerString(time){
+            if(time<0){
+              clearInterval(this.countdownInterval);
+            }else{
+              let min = Math.floor(time/60);
+              let seconds = time-(min*60);
+              if(min<10){
+                min='0'+min;
+              }
+              if(seconds<10){
+                seconds='0'+seconds;
+              }
+              return `${min}:${seconds}`;
+            }
+          },
+          //开始倒计时
+          start(){
+            this.setData({
+              visable:false,
+              isShowCountDown:true
+            });
+          },
+          //倒计时结束，开始计时做题
+          countdownFinish(){
+            if(this.data.answerId){
+              this.setData({
+                isStart:true,
+                isShowCountDown:false
+              });
+              this.startCountDownIntervar();
+            }else{
+              this.$toast('当前网络质量不佳，请稍后重试').then(()=>{
+                this.$router.back();
+              })
+            }
+
+          },
+          //开始倒计时
+          startCountDownIntervar(){
+            if(!this.countdownInterval){
+              this.countdownInterval=setInterval(async ()=>{
+                if(this.data.timer>0){
+                  if(this.data.msTimer<1000){
+                    this.data.msTimer=this.data.msTimer+100;
+                  }else{
+                    this.data.msTimer=0;
+                    this.data.timer=this.data.timer-1;
+                    this.setData({
+                      timer:this.data.timer
+                    })
+                  }
+                }else{
+                  //答题结束
+                  this.stopCountDown();
+                  wx.showLoading({
+                    title: '时间到',
+                    mask:true
+                  });
+                  /*获取答题结果*/
+                  let res =await this.$api.calc.result({answerId:this.data.answerId});
+                  if(res.rcode==300){
+                    this.setData({
+                      result:res.data,
+                      resultVisable:true
+                    });
+                    wx.hideLoading();
+                    if(this.homeworkRecordId){
+                      this.$api.hw.saveMyHomework({recordId:this.homeworkRecordId,homeworkItems:[{itemId:this.data.work.itemList[0].id,type:4}]})
+                    }
+                  }else{
+                    wx.hideLoading();
+                  }
+
+                }
+              },100);
+            }
+          },
+          //停止倒计时
+          stopCountDown(){
+            clearInterval(this.countdownInterval);
+            this.countdownInterval=null;
+          },
+          //获取作业详情
+          async getWorkDetail(id){
+            let res=await this.$api.hw.getMyHomeworkDetail({homeworkRecordId:id});
+            if(res.rcode==300){
+              this.setData({
+                work:res.data.model,
+                timer:res.data.model.itemList[0].execTimeTotal*60,
+                allTime:res.data.model.itemList[0].execTimeTotal*60,
+                passScore:res.data.model.itemList[0].execScore
+              });
+            }
+          },
+          //获取作业问题列表
+          async getWorkIssueList(params){
+            let _params={
+              preview:false,
+              total:150
+            };
+            if(params.homeworkItemId){
+              _params.homeworkItemId=params.homeworkItemId;
+            }else if(params.ruleIds){
+              _params.ruleIds=params.ruleIds;
+            }
+            let res=await this.$api.calc.issueList(_params);
+            if(res.rcode==300){
+              this.data.issues=res.data.exercisesList;
+              this.data.answerId=res.data.answerId;
+              //设置当前问题和下一问题
+              await this.setTopicAndNextTopic();
+              //设置当前问题需答案位置和个数
+              this.setAnswerMsg();
+            }
+          },
+          //设置需答案位置和个数
+          setAnswerMsg(){
+            let answerMsg=[];
+            this.data.currentTopic.map((item,index)=>{
+              if(item=='#'){
+                answerMsg.push(index);
+              }
+            });
+            this.setData({
+              answerMsg:answerMsg
+            })
+          },
+          //问题转数组格式
+          issueConvert(content){
+            return new Promise((resolve => {
+              let topic=content.split('#');
+              for (let i=0;i<topic.length;i++){
+                topic[i]=topic[i].replace('/','÷');
+                topic[i]=topic[i].replace('*','×');
+                if(i!=(topic.length-1)){
+                  topic.splice(i+1,0,'#');
+                  i++;
+                }
+              }
+              resolve(topic);
+            }))
+          },
+          //确认按钮/下一题按钮
+          async confirm(){
+            if(!this.data.isSubmit){
+              this.data.isSubmit=true;
+              //提交
+              if(this.data.answers.length<=0){
+                this.$toast('请先填写答案');
+                this.data.isSubmit=false;
+                return false;
+              }
+              for(let i=0;i<this.data.answerMsg.length;i++){
+                if(!this.data.answers[this.data.answerMsg[i]] || (this.data.answers[this.data.answerMsg[i]] && this.data.answers[this.data.answerMsg[i]]=='')){
+                  this.$toast('答案不能为空');
+                  this.data.isSubmit=false;
+                  return false;
+                  break;
+                }
+              }
+              this.stopCountDown();//提交时先停止倒计时
+              let _answers=JSON.parse(JSON.stringify(this.data.answers));
+              _answers.map((item,index)=>{
+                if(!item){
+                  _answers.splice(index,1);
+                }
+              });
+              let res=await this.$api.calc.submitAnswer({answer:_answers.join(','),exercisesId:this.data.issues[this.data.activeIndex].id});
+              if(res.rcode==300){
+                if(res.data.isRight){
+                  this.setData({
+                    isGrate:true,
+                    currentScore:this.data.currentScore+1
+                  });
+                }else{
+                  this.setData({
+                    isGrate:false,
+                  })
+                }
+                this.setData({
+                  isSubmit:true,
+                  cursorIndex:-1//去掉光标
+                });
+              }
+              //下一题
+              setTimeout(()=>{
+                this.setData({//开始问题的的切换
+                  transition:true
+                });
+              },500);
+            }
+          },
+          //题目切换动画结束，开始下一题作答
+          async toNextTopic(e){
+            //因为添加和移除样式会导致2次动画结束，所以会执行想次函数。
+            //通过判断this.data.isSubmit 防止重复执行，开多个计时器。
+            if(this.data.isSubmit){
+              this.data.isSubmit=false;
+              this.data.activeIndex=this.data.activeIndex+1;
+              await this.setTopicAndNextTopic();
+
+              //设置当前问题和下一问题
+              //设置当前问题需答案位置和个数
+              this.setAnswerMsg();
+              this.setData({
+                answers:[],//清空答案栏
+                cursorIndex:1,//默认显示第一个答案的光标
+                isSubmit:false,
+                transition:false,
+              });
+              this.startCountDownIntervar();//开始计时
+            }
+
+          },
+          //设置当前题目和下一题题目
+          async setTopicAndNextTopic(){
+            return new Promise(async (resolve)=>{
+              let _currentTopic=await this.issueConvert(this.data.issues[this.data.activeIndex].content);
+              let _nextTopic=await this.issueConvert(this.data.issues[this.data.activeIndex+1].content);
+              this.setData({
+                currentTopic:_currentTopic,
+                nextTopic:_nextTopic
+              });
+              resolve();
+            })
+          },
+          //再来一次
+          async again(){
+            await this.initData();
+            this.onLoad();
+          },
+          ///初始化数据
+          initData(){
+            return new Promise((resolve => {
+              //初始化数据
+              this.setData({
+                isStart:false,
+                isSubmit:false,
+                mstimer:0,
+                timer:120,
+                cursorIndex:1,
+                answers:[],
+                currentScore:0,
+                activeIndex:0,
+                isShowCountDown:false,
+                resultVisable:false
+              });
+              resolve();
+            }))
+          }
+        }
+    })
+</script>
+<style lang="scss" src="./reckonChallenge.scss"></style>

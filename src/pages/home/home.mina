@@ -1,0 +1,356 @@
+<config>
+  {
+  "usingComponents": {
+  "baseNone": "../../components/baseNone/baseNone.mina"
+  }
+  }
+</config>
+<template>
+  <view>
+    <view class="head-nav flex flex-align-center flex-pack-justify pl-30 pr-30">
+      <view class="stu-msg flex flex-align-center">
+        <view class="stu-pic">
+          <image src="{{userInfo.pic}}" wx:if="{{userInfo.pic !== null && userInfo.pic !== undefined}}"></image>
+          <image src="../../assets/images/common/student-head.png" wx:else></image>
+        </view>
+        <view class="stu-name">{{userInfo.name}}</view>
+        <view class="grade-name">{{gradeArray[userInfo.grade - 1].name}}</view>
+      </view>
+      <view class="level-btn flex flex-align-center flex-pack-center" wx:if="{{showVipBtn}}"><image class="vip-btn-icon" src="../../assets/images/home/vip-btn-icon.png"></image><text>升级会员</text></view>
+    </view>
+
+    <view class="main ml-25 mr-25" wx:if="{{userInfo.classNo === null || userInfo.classNo === undefined}}">
+      <view class="box class-msg-box mb-20 pl-25 pr-25">
+        <view class="new-msg-tit">
+          <image src="../../assets/images/home/class-msg-tit.png" />
+        </view>
+        <view class="none-msg pb-50">
+          <view class="none-pic">
+            <image src="../../assets/images/home/none-class.png"></image>
+          </view>
+          <view class="none-tit">你没有加入班级</view>
+          <view class="none-cont">你需要向老师发起加入班级申请，才能使用班级通知功能</view>
+        </view>
+        <view class="join-btn" bindtap="goJoin">加入一个班级</view>
+      </view>
+    </view>
+
+    <view class="banner" wx:if="{{userInfo.classNo !== null && userInfo.classNo !== undefined}}">
+      <swiper class="home-banner" indicator-dots="false" autoplay="false" interval="6000" duration="1000" indicator-color="rgba(0,0,0,0.2)" indicator-active-color="#ffffff">
+        <swiper-item  wx:for="{{bannerList}}" wx:for-index="bIndex" wx:key="bIndex" catchtap="bannerNavigation" data-url="{{item.picUrl}}">
+          <image class="banner" src="{{item.pic}}"></image>
+        </swiper-item>
+      </swiper>
+      <view class="banner-mask"></view>
+    </view>
+
+    <view class="main ml-25 mr-25" wx:if="{{userInfo.classNo !== null && userInfo.classNo !== undefined}}">
+
+      <view class="box msg-box mb-45 pl-25 pr-25">
+        <view class="new-msg-tit">
+          <image src="../../assets/images/home/new-msg-tit.png" />
+        </view>
+        <view class="box-more">
+          <!--<navigator class="more fr" url="/pages/msg/msgList/msgList">
+            全部
+            <form class="saveFormId" report-submit="true" bindsubmit="formIdSubmit"><button form-type="submit">Submit</button></form>
+            <text class="icon icon-right"></text>
+          </navigator>-->
+        </view>
+        <view class="box-cont">
+          <baseNone wx:if="{{noticeList.length === 0}}">
+            <text slot="tips">暂无新消息</text>
+            <text slot="tipsText">老师尚未下发通知，先去其他地方看看吧</text>
+          </baseNone>
+          <view class="msg-list ml-25 mt-10 mb-10">
+            <view wx:for="{{noticeList}}" wx:for-item="notice" wx:key="{{notice.id}}" class="msg-item relative {{notice.status === 0 ? 'new': ''}}" bind:tap="getNoticeDetail" data-notice="{{notice}}">
+              <view class="msg-icon mr-20">
+                <image src="../../assets/images/msg/msg-icon.png" wx:if="{{notice.noticeType === 1}}"></image>
+                <image src="../../assets/images/msg/vote-icon.png" wx:elif="{{notice.noticeType === 2}}"></image>
+              </view>
+              <text class="ellipsis">{{notice.title}}</text>
+              <view class="pic-icon icon icon-pic ml-25" wx:if="{{notice.existAttach}}"></view>
+              <form class="saveFormId" report-submit="true" bindsubmit="formIdSubmit"><button form-type="submit">Submit</button></form>
+            </view>
+          </view>
+          <navigator class="more-btn mb-30 ml-30 mr-30" url="/pages/msg/msgList/msgList?unReadCount={{unReadCount}}">
+            <text wx:if="{{unReadCount === 0}}">全部通知</text>
+            <text wx:else>你有{{unReadCount}}条未读通知</text>
+            <text class="icon icon-right"></text>
+            <form class="saveFormId" report-submit="true" bindsubmit="formIdSubmit"><button form-type="submit">Submit</button></form>
+          </navigator>
+        </view>
+      </view>
+
+      <view class="today-task-tit">
+        <image src="../../assets/images/home/today-task-tit.png"></image>
+      </view>
+
+      <view class="box task-box mt-20 mb-5 pl-25 pr-25 relative" wx:for="{{homeworkList}}" wx:for-item="home" wx:key="{{home.recordId}}" bind:tap="goDetail" data-home="{{home}}">
+        <form class="saveFormId" report-submit="true" bindsubmit="formIdSubmit"><button form-type="submit">Submit</button></form>
+        <view class="box-tit flex flex-pack-justify flex-align-center">
+          <view class="box-tit-cont flex flex-align-center">
+            <view class="task-icon mr-20">
+              <image wx:if="{{home.subject === 1}}" src="../../assets/images/home/cn-icon.png"></image>
+              <image wx:elif="{{home.subject === 2}}" src="../../assets/images/home/math-icon.png"></image>
+              <image wx:else src="../../assets/images/home/en-icon.png"></image>
+            </view>
+            <view class="task-tit-text">{{home.title}}</view>
+          </view>
+
+          <view class="go-submit" wx:if="{{home.status === 0}}">去提交</view>
+          <view class="submitted" wx:else>
+            <image src="../../assets/images/home/submitted.jpg"></image>
+          </view>
+
+        </view>
+        <view class="box-cont task-cont pt-10 pb-10">
+          <view wx:for="{{home.itemList}}" wx:for-item="homeItem" wx:key="{{homeItem.content}}"  wx:for-index="idx">
+            <block wx:if="{{homeItem.type==4}}">
+              {{homeItem.execTimeTotal}}分钟口算作业，达标分数{{homeItem.execScore}}分
+            </block>
+            <block wx:else>
+              {{idx + 1}}.{{homeItem.content}}
+            </block>
+          </view>
+        </view>
+      </view>
+      <view class="box task-box mt-20 mb-5 pl-25 pr-25" wx:if="{{homeworkList.length === 0}}">
+        <baseNone noneType="homework">
+          <view slot="tips">今日暂无作业记录</view>
+          <view slot="tipsText">今天老师没有布置过作业哦，请查看往期任务</view>
+        </baseNone>
+      </view>
+      <view class="task-more">
+        <navigator class="task-more-btn relative" url="/pages/hw/hwList/hwList">
+          往期任务>>
+          <form class="saveFormId" report-submit="true" bindsubmit="formIdSubmit"><button form-type="submit">Submit</button></form>
+        </navigator>
+      </view>
+
+    </view>
+
+    <official-account binderror="bindWxError" bindload="bindload"></official-account>
+
+  </view>
+  <view class="feedback iconfont icon-kefu">
+    <button open-type="contact">进入客服会话</button>
+  </view>
+
+  <view class="invitation-wrapper" wx:if="{{visible}}">
+    <view class="mask"></view>
+    <view class="invitation-pop">
+      <view class="msg-tit">
+        <image src="../../assets/images/home/invitation-tit.png" />
+      </view>
+      <view class="close-btn iconfont icon-plus" catchtap="closePop"></view>
+      <view class="cont">
+        <view class="cont-tit">HI，同学们：</view>
+        <view class="cont-text">我在语智通小程序创建了班级，现邀请你加入我的班级~</view>
+      </view>
+      <view class="table">
+        <view class="table-item flex flex-align-center">
+          <view class="item-l">学校</view>
+          <view class="item-r">{{joinClassInfo.schoolName}}</view>
+        </view>
+        <view class="table-item flex flex-align-center">
+          <view class="item-l">班级</view>
+          <view class="item-r">{{joinClassInfo.className}}</view>
+        </view>
+        <view class="table-item flex flex-align-center">
+          <view class="item-l">老师</view>
+          <view class="item-r">{{joinClassInfo.teacherName}}老师</view>
+        </view>
+      </view>
+      <view class="pop-join-btn"catchtap="submitEntry">确定加入</view>
+    </view>
+  </view>
+</template>
+<script>
+  import { Page } from '@tinajs/tina';
+  import {tinax} from '@/store'
+  Page.define({
+    mixins: [
+      tinax.connect({
+        getters (getters) {
+          return {
+            userInfo: getters.userInfo(),
+            joinClassId: getters.joinClassId()
+          };
+        },
+        actions ({setUserInfo, setJoinClassId}) {
+          return {
+            setUserInfo, setJoinClassId
+          }
+        },
+      }),
+    ],
+    data: {
+      gradeArray: [
+        {id: 1, name: '一年级'},
+        {id: 2, name: '二年级'},
+        {id: 3, name: '三年级'},
+        {id: 4, name: '四年级'},
+        {id: 5, name: '五年级'},
+        {id: 6, name: '六年级'},
+        {id: 7, name: '七年级'},
+        {id: 8, name: '八年级'},
+        {id: 9, name: '九年级'},
+      ],
+      noticeList: [],
+      homeworkList: [],
+      bannerList:[],
+      unReadCount: 0,
+      visible: false,
+      joinClassInfo: '',
+      showVipBtn: false,
+    },
+    beforeLoad() {
+    },
+    onLoad() {
+      wx.setNavigationBarTitle({
+        title: '和教育语智通'
+      });
+    },
+    onReady() {},
+    onShow() {
+      // 检查资料
+      this.getUserData();
+      // 如果tinax中存有classysId,则
+      if (this.data.joinClassId !== '' && this.data.userInfo.classNo === undefined) {
+        const params = {
+          access_token: wx.getStorageSync('accessToken'),
+          classysId: this.data.joinClassId
+        }
+        this.$api.home.getClassMessage(params).then((res)=> {
+          if (res.rcode === 300) {
+            this.setData({
+              joinClassInfo: res.data,
+              visible: true
+            })
+          }
+        })
+      } else {
+        this.setJoinClassId('')
+      }
+      this.getNewNotice();
+      this.getMyToDayHomework();
+      this.getBanner();
+    },
+    onHide() {
+    },
+    onUnload() {
+    },
+    compute() {
+    },
+    methods: {
+      // 获取资料
+      async getUserData() {
+        let accessToken = wx.getStorageSync('accessToken');
+        let params = {
+          access_token: accessToken
+        };
+        let res = await this.$api.user.getSetting(params);
+        if (res.rcode === 300) {
+          this.setUserInfo(res.data)
+          let data = res.data;
+          if (!data.grade || !data.name || !data.mobile) {
+            this.$router.redirect('/pages/login/data/data');
+          }
+        }
+      },
+      async getMyToDayHomework(){
+        let res = await this.$api.home.getMyToDayHomework();
+        if (res.rcode === 300){
+          this.setData({
+            homeworkList: res.data.homeworkList
+          });
+        }
+      },
+      async getNewNotice(){
+        let res = await  this.$api.home.getNewNotice();
+        if (res.rcode === 300){
+          this.setData({
+            noticeList: res.data.noticeList,
+            unReadCount: res.data.unReadCount
+          })
+        }
+      },
+      // 跳转到信息详情
+      getNoticeDetail(event){
+        let notice = event.currentTarget.dataset.notice;
+        wx.navigateTo({
+          url: `/pages/msg/msgList/msgList?id=${notice.id}&unReadCount=${this.data.unReadCount}`
+        })
+      },
+      goDetail(event){
+        let home = event.currentTarget.dataset.home;
+        if (home.status === 0){// 未完成
+          if(home.itemList[0].type===4){
+            wx.navigateTo({
+              url: `/pages/fastReckon/reckonChallenge/reckonChallenge?workId=${home.recordId}&homeworkItemId=${home.itemList[0].id}`
+            })
+          }else{
+            wx.navigateTo({
+              url: '/pages/hw/submitHw/submitHw?id=' + home.recordId
+            })
+          }
+        }else {
+          wx.navigateTo({
+            url: '/pages/hw/hwReport/hwReport?id=' + home.recordId
+          })
+        }
+        /*wx.navigateTo({
+          url: '/pages/hw/hwReport/hwReport'
+        })*/
+      },
+      async formIdSubmit(e){
+        let formId=e.detail.formId;
+        this.$api.until.saveFormId({formId:formId});
+      },
+      async getBanner(){
+        let res=await this.$api.until.getBanner({type:1});
+        if(res.rcode===300){
+          this.setData({
+            bannerList:res.data.bannerList
+          });
+        }
+      },
+      bannerNavigation(e){
+        let url=e.currentTarget.dataset.url;
+        if(url && url!==''){
+          this.router.navigate(url);
+        }
+      },
+      goJoin () {
+        this.$router.navigate('/pages/login/joinClass/joinClass')
+      },
+      closePop () {
+        this.setData({
+          visible: false
+        })
+      },
+      submitEntry () {
+        const params = {
+          classysId: this.data.joinClassId
+        }
+        this.$api.home.entryById(params).then(res=>{
+          if (res.rcode === 300) {
+            const entryMode = res.data.entryMode
+            if (entryMode === 0) {
+              this.$toast('成功进入班级');
+            } else if (entryMode === 2) {
+              this.$toast('申请成功，等待老师审核批准');
+            }
+            this.getUserData()
+            this.setJoinClassId('')
+            this.closePop()
+          } else {
+            this.$toast(res.message);
+          }
+        })
+      },
+    }
+  })
+</script>
+<style lang="scss" src="./home.scss"></style>

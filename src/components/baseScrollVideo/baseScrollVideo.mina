@@ -1,0 +1,50 @@
+<config>
+{
+  "component": true
+}
+</config>
+
+<template>
+  <scroll-view class="scroll-video-wrapper ml-30" scroll-x>
+    <view class="video-item mr-20" wx:for="{{list}}" wx:key="{{item.id}}" catchtap="toVideoDetail" data-lesson="{{item.id}}" data-video="{{item.videoId}}">
+      <view class="video-pic">
+        <image src="{{item.videoModel.videoPic}}"></image>
+        <view class="play-icon icon icon-play"></view>
+      </view>
+      <view class="video-item-tit mt-15 mb-15 ellipsis">{{item.videoModel.videoName}}</view>
+    </view>
+  </scroll-view>
+</template>
+
+<script>
+  import { Component } from '@tinajs/tina';
+Component.define({
+  options: {
+    addGlobalClass: true,
+  },
+  properties: {
+    list: { // 属性名
+      type: Array, // 类型（必填），目前接受的类型包括：String, Number, Boolean, Object, Array, null（表示任意类型）
+      value: [], // 属性初始值（可选），如果未指定则会根据类型选择一个
+      observer: function(newVal, oldVal, changedPath) {
+        // 属性被改变时执行的函数（可选），也可以写成在methods段中定义的方法名字符串, 如：'_propertyChange'
+        // 通常 newVal 就是新设置的数据， oldVal 是旧数据
+      }
+    },
+  },
+  data: {},
+  created () {},
+  attached () {},
+  ready () {},
+  moved () {},
+  detached () {},
+  methods: {
+    toVideoDetail(e){
+      let lessonId=parseInt(e.currentTarget.dataset.lesson);
+      let videoId=parseInt(e.currentTarget.dataset.video);
+      this.$router.navigate(`/pages/video/videoDetail/videoDetail?lessonId=${lessonId}&videoId=${videoId}`);
+    }
+  },
+})
+</script>
+<style lang="scss" src="./baseScrollVideo.scss"></style>

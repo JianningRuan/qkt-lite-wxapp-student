@@ -1,0 +1,74 @@
+<config>
+    {
+    "component": true
+    }
+</config>
+<template>
+  <view class="video-list">
+    <!--视频-->
+    <view class="video-item flex pl-30 pr-30" wx:for="{{list}}" wx:key="{{item.id}}" wx:for-index="vIndex" catchtap="toVideoDetail" data-lesson="{{item.id}}" data-video="{{item.videoId}}" data-index="{{vIndex}}"><!--bottom-->
+      <view class="video-cover">
+        <image src="{{item.videoPic || item.videoModel.videoPic}}" />
+        <view class="time">{{item.videoModel.videoTimeStr}}</view>
+        <view class="video-cover-mark">
+          <!--<view class="over-label">
+            <block wx:if="{{item.videoUserModel}}">
+              {{item.videoUserModel.browsing==0?'未看':item.videoUserModel.browsing==1?'正在看':item.videoUserModel.browsing==2?'已看':''}}
+            </block>
+            <block wx:else>
+              {{item.isLook?'已看':'未看'}}
+            </block>
+          </view>-->
+          <view class="over-label" wx:if="{{item.videoUserModel && item.videoUserModel.browsing === 2}}">已看</view>
+        </view>
+        <view class="progress-wrapper" wx:if="{{item.videoUserModel && item.videoUserModel.position}}">
+          <view class="progress" style="width: {{item.videoUserModel.position / item.videoModel.videoTime * 100 + '%'}};"></view>
+        </view>
+      </view>
+      <view class="video-cont ml-30 flex flex-v flex-pack-justify">
+        <view class="v-tit ellipsis">{{item.videoName || item.videoModel.videoName}}</view>
+        <view class="v-author ellipsis">讲师：{{item.authorName || item.videoModel.authorName}}</view>
+        <view class="v-msg">
+          <view class="v-msg-item mr-20"><text class="fire-icon iconfont icon-fire"></text>{{item.playCount || item.videoModel.playCount}}</view>
+        </view>
+      </view>
+    </view>
+    <!--视频-end-->
+  </view>
+</template>
+<script>
+    import { Component } from '@tinajs/tina';
+
+    Component.define({
+        options: {
+            addGlobalClass: true,
+        },
+        properties: {
+          list: { // 属性名
+            type: Array, // 类型（必填），目前接受的类型包括：String, Number, Boolean, Object, Array, null（表示任意类型）
+            value: [], // 属性初始值（可选），如果未指定则会根据类型选择一个
+            observer: function(newVal, oldVal, changedPath) {
+              // 属性被改变时执行的函数（可选），也可以写成在methods段中定义的方法名字符串, 如：'_propertyChange'
+              // 通常 newVal 就是新设置的数据， oldVal 是旧数据
+            }
+          },
+        },
+        data: {},
+        attached() {},
+        methods: {
+          toVideoDetail(e){
+            let lessonId = parseInt(e.currentTarget.dataset.lesson);
+            let videoId = parseInt(e.currentTarget.dataset.video);
+            let index = parseInt(e.currentTarget.dataset.index);
+            // this.$router.navigate(`/pages/video/videoDetail/videoDetail?lessonId=${lessonId}&videoId=${videoId}`);
+            let params = {
+              lessonId,
+              videoId,
+              index
+            };
+            this.triggerEvent('clickVideo', params);
+          }
+        },
+    })
+</script>
+<style lang="scss" src="./baseVideoList.scss"></style>
